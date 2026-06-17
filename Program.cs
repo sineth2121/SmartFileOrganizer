@@ -14,8 +14,6 @@ namespace SmartFileOrganizer
         [STAThread]
         static void Main()
         {
-            DatabaseSetup.Initialize();
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new FormDashboard());
