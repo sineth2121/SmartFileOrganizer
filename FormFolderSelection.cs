@@ -1,26 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using System.Windows.Forms;
-using System.IO; // Added for future path and directory validations
 using MySql.Data.MySqlClient;
-
-
 
 namespace SmartFileOrganizer
 {
     public partial class FormFolderSelection : Form
     {
+        private bool hasSubfolders = false;
+
         public FormFolderSelection()
         {
             InitializeComponent();
-            // This assigns the text property so your dashboard header can read it if needed
             this.Text = "Folder Selection";
+
+            SetupCheckboxImageList();
+
             try
             {
                 using (MySqlConnection conn = DatabaseConfig.GetConnection())
@@ -31,12 +27,10 @@ namespace SmartFileOrganizer
                     {
                         conn.Open();
 
-                        // ExecuteReader is used specifically for pulling data back from a query
                         using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
-                            if (reader.Read()) // Checks if a row was found
+                            if (reader.Read())
                             {
-                                // Extract the string value from the database column name
                                 destinationText.Text = reader["destination_folder_path"].ToString();
                             }
                         }
@@ -47,19 +41,170 @@ namespace SmartFileOrganizer
             {
                 MessageBox.Show("Error reading data: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
+
+        private void SetupCheckboxImageList()
+        {
+            ImageList imageList = new ImageList();
+            imageList.ImageSize = new Size(16, 16);
+            imageList.ColorDepth = ColorDepth.Depth32Bit;
+
+            Bitmap uncheckedImg = new Bitmap(16, 16);
+            using (Graphics g = Graphics.FromImage(uncheckedImg))
+            {
+                g.Clear(Color.Transparent);
+                using (Pen pen = new Pen(Color.DimGray, 2f))
+                {
+                    g.DrawRectangle(pen, 1, 1, 13, 13);
+                }
+            }
+            imageList.Images.Add(uncheckedImg);
+
+            Bitmap checkedImg = new Bitmap(16, 16);
+            using (Graphics g = Graphics.FromImage(checkedImg))
+            {
+                g.Clear(Color.Transparent);
+                using (Pen pen = new Pen(Color.DimGray, 2f))
+                {
+                    g.DrawRectangle(pen, 1, 1, 13, 13);
+                }
+                using (Font font = new Font("Segoe UI", 10f, FontStyle.Bold))
+                {
+                    g.DrawString("✓", font, Brushes.ForestGreen, 0, -1);
+                }
+            }
+            imageList.Images.Add(checkedImg);
+
+            listViewDirectoryContent.StateImageList = imageList;
+        }
+
         private void btnImport_Click(object sender, EventArgs e)
         {
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
                 folderDialog.Description = "Select the source folder to Import Files.";
-                folderDialog.ShowNewFolderButton = false; // Source folder should already exist
+                folderDialog.ShowNewFolderButton = false;
 
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
-                    // Assign the chosen path string to your import textbox
                     importText.Text = folderDialog.SelectedPath;
+
+                    PopulateDirectoryViewer(folderDialog.SelectedPath);
+                }
+            }
+        }
+
+        private void PopulateDirectoryViewer(string folderPath)
+        {
+            listViewDirectoryContent.Items.Clear();
+            hasSubfolders = false;
+
+            try
+            {
+                DirectoryInfo dirInfo = new DirectoryInfo(folderPath);
+
+                if (!dirInfo.Exists)
+                {
+                    return;
+                }
+
+                foreach (DirectoryInfo subDir in dirInfo.GetDirectories())
+                {
+                    hasSubfolders = true;
+
+                    ListViewItem item = new ListViewItem(subDir.Name);
+                    item.SubItems.Add("Folder");
+                    item.SubItems.Add("Scan Subfolders");
+                    item.Tag = subDir.FullName;
+                    item.StateImageIndex = 0;
+
+                    listViewDirectoryContent.Items.Add(item);
+                }
+
+                foreach (FileInfo file in dirInfo.GetFiles())
+                {
+                    ListViewItem item = new ListViewItem(file.Name);
+                    item.SubItems.Add("File");
+                    item.SubItems.Add("Process Directly");
+                    item.Tag = file.FullName;
+                    item.StateImageIndex = -1;
+
+                    listViewDirectoryContent.Items.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Unable to read directory contents: " + ex.Message,
+                    "Directory Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            EvaluateValidationRules();
+        }
+
+        private void listViewDirectoryContent_MouseClick(object sender, MouseEventArgs e)
+        {
+            ListViewHitTestInfo hit = listViewDirectoryContent.HitTest(e.Location);
+
+            if (hit.Item == null)
+                return;
+
+            string itemType = hit.Item.SubItems[1].Text;
+
+            if (itemType != "Folder")
+                return;
+
+            if (hit.Item.StateImageIndex == 0)
+            {
+                hit.Item.StateImageIndex = 1;
+                hit.Item.SubItems[2].Text = "EXCLUDED (Move folder whole, skip inside)";
+                hit.Item.BackColor = Color.LavenderBlush;
+            }
+            else
+            {
+                hit.Item.StateImageIndex = 0;
+                hit.Item.SubItems[2].Text = "Scan Subfolders";
+                hit.Item.BackColor = Color.White;
+            }
+
+            EvaluateValidationRules();
+        }
+
+        private void EvaluateValidationRules()
+        {
+            if (!hasSubfolders)
+            {
+                lblValidationStatus.Text = "Ready: No subfolders detected. Direct files will be organized.";
+                lblValidationStatus.ForeColor = Color.ForestGreen;
+            }
+            else
+            {
+                int checkedCount = 0;
+                int totalFoldersCount = 0;
+
+                foreach (ListViewItem item in listViewDirectoryContent.Items)
+                {
+                    if (item.SubItems[1].Text == "Folder")
+                    {
+                        totalFoldersCount++;
+
+                        if (item.StateImageIndex == 1)
+                        {
+                            checkedCount++;
+                        }
+                    }
+                }
+
+                if (checkedCount == 0)
+                {
+                    lblValidationStatus.Text = "Subfolders detected. Tick folders to exclude from deep scanning.";
+                    lblValidationStatus.ForeColor = Color.Firebrick;
+                }
+                else
+                {
+                    lblValidationStatus.Text = "✓ Success: exclude rules are set (" +
+                        checkedCount + " of " + totalFoldersCount +
+                        " folders custom restricted).";
+                    lblValidationStatus.ForeColor = Color.ForestGreen;
                 }
             }
         }
@@ -81,7 +226,6 @@ namespace SmartFileOrganizer
                         {
                             conn.Open();
 
-                            // 1. Check if a destination already exists
                             string checkQuery = "SELECT COUNT(*) FROM app_settings";
                             using (MySqlCommand checkCmd = new MySqlCommand(checkQuery, conn))
                             {
@@ -89,7 +233,6 @@ namespace SmartFileOrganizer
 
                                 if (count > 0)
                                 {
-                                    // 2. Warning before replacing
                                     DialogResult result = MessageBox.Show(
                                         "A destination folder already exists.\n\nChanging it will reset the whole database and history.\n\nDo you want to continue?",
                                         "Warning",
@@ -102,7 +245,6 @@ namespace SmartFileOrganizer
                                         return;
                                     }
 
-                                    // 3. Delete old record
                                     string deleteQuery = "DELETE FROM app_settings";
                                     using (MySqlCommand deleteCmd = new MySqlCommand(deleteQuery, conn))
                                     {
@@ -111,7 +253,6 @@ namespace SmartFileOrganizer
                                 }
                             }
 
-                            // 4. Insert new destination
                             string insertQuery = "INSERT INTO app_settings (destination_folder_path) VALUES (@path)";
                             using (MySqlCommand insertCmd = new MySqlCommand(insertQuery, conn))
                             {
@@ -142,16 +283,14 @@ namespace SmartFileOrganizer
             }
         }
 
-
         private void importText_TextChanged(object sender, EventArgs e)
         {
-            // Example layout: You could check if Directory.Exists(importText.Text) 
-            // to turn the text border color green or red.
+
         }
 
         private void destinationText_TextChanged(object sender, EventArgs e)
         {
-            // Example layout: Ensure the destination path isn't identical to the import path.
+
         }
     }
 }

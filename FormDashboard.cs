@@ -12,26 +12,25 @@ namespace SmartFileOrganizer
 {
     public partial class FormDashboard : Form
     {
-        // Keeps track of the currently active form in the container
         private Form activeForm = null;
+        private FormFolderSelection folderSelectionForm = null;
+
         public FormDashboard()
         {
             InitializeComponent();
         }
+
         private void OpenChildForm(Form childForm)
         {
-            // If there's an active form, close it to free up memory
             if (activeForm != null)
-                activeForm.Close();
+                activeForm.Hide();
 
             activeForm = childForm;
 
-            // Configure the form to behave like a control panel view
             childForm.TopLevel = false;
             childForm.FormBorderStyle = FormBorderStyle.None;
             childForm.Dock = DockStyle.Fill;
 
-            // Add it to the main dashboard container panel
             panelMain.Controls.Add(childForm);
             panelMain.Tag = childForm;
 
@@ -60,8 +59,21 @@ namespace SmartFileOrganizer
 
         private void btnFolderSelection_Click(object sender, EventArgs e)
         {
-            // This runs the  helper function and pushes FormFolderSelection into panelMain
-            OpenChildForm(new FormFolderSelection());
+            if (folderSelectionForm == null)
+            {
+                folderSelectionForm = new FormFolderSelection();
+                OpenChildForm(folderSelectionForm);
+            }
+            else
+            {
+                if (activeForm != null && activeForm != folderSelectionForm)
+                    activeForm.Hide();
+
+                activeForm = folderSelectionForm;
+                panelMain.Tag = folderSelectionForm;
+                folderSelectionForm.BringToFront();
+                folderSelectionForm.Show();
+            }
         }
 
         private void btnDuplicateCleaner_Click(object sender, EventArgs e)

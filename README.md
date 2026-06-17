@@ -190,3 +190,8 @@ CREATE TABLE IF NOT EXISTS duplicate_files (
     FOREIGN KEY (group_id) REFERENCES duplicate_groups(id) ON DELETE CASCADE
 );
 ```
+
+how to use git hub;
+git add -A
+git commit -m "Update README and remove auto table creation"
+git push
