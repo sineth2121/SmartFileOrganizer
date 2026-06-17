@@ -1,0 +1,13 @@
+## .NET
+bin/
+obj/
+packages/
+*.user
+*.suo
+*.sln.docstates
+*.userprefs
+
+## Visual Studio
+.vs/
+.vscode/
+*.csproj.user
