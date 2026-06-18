@@ -104,19 +104,37 @@
     <Compile Include="FormDashboard.Designer.cs">
       <DependentUpon>FormDashboard.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormConfigureRules.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormConfigureRules.Designer.cs">
+      <DependentUpon>FormConfigureRules.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormFolderSelection.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FormFolderSelection.Designer.cs">
       <DependentUpon>FormFolderSelection.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormImportProgress.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormImportProgress.Designer.cs">
+      <DependentUpon>FormImportProgress.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="FormDashboard.resx">
       <DependentUpon>FormDashboard.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormConfigureRules.resx">
+      <DependentUpon>FormConfigureRules.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormFolderSelection.resx">
       <DependentUpon>FormFolderSelection.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormImportProgress.resx">
+      <DependentUpon>FormImportProgress.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

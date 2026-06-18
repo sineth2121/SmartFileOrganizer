@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -291,6 +292,192 @@ namespace SmartFileOrganizer
         private void destinationText_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnStartImport_Click(object sender, EventArgs e)
+        {
+            string sourcePath = importText.Text;
+            string destPath = destinationText.Text;
+
+            if (string.IsNullOrWhiteSpace(sourcePath) || sourcePath == "Imported folder location appears here!" || !Directory.Exists(sourcePath))
+            {
+                MessageBox.Show("Please select a valid source folder.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(destPath) || destPath == "Destination folder location appears here!")
+            {
+                MessageBox.Show("Please select a valid destination folder.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string operationType = rbCopy.Checked ? "Copy" : "Cut";
+
+            HashSet<string> excludedFolders = new HashSet<string>();
+            foreach (ListViewItem item in listViewDirectoryContent.Items)
+            {
+                if (item.SubItems[1].Text == "Folder" && item.StateImageIndex == 1)
+                    excludedFolders.Add(item.Tag.ToString());
+            }
+
+            btnStartImport.Enabled = false;
+
+            using (MySqlConnection conn = DatabaseConfig.GetConnection())
+            {
+                conn.Open();
+                using (MySqlCommand cmd = new MySqlCommand("DELETE FROM imported_files", conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            FormImportProgress progressForm = new FormImportProgress();
+            progressForm.Show(this);
+
+            int totalFiles = CountFiles(sourcePath, excludedFolders);
+
+            if (totalFiles == 0)
+            {
+                progressForm.Close();
+                btnStartImport.Enabled = true;
+                MessageBox.Show("No files found to import.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            progressForm.SetTotal(totalFiles);
+            progressForm.SetStatus("Importing files...");
+
+            int processed = 0;
+            ImportDirectory(sourcePath, sourcePath, destPath, operationType, excludedFolders, progressForm, ref processed);
+
+            if (progressForm.Cancelled)
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+                    using (MySqlCommand cmd = new MySqlCommand("DELETE FROM imported_files", conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                progressForm.Close();
+                btnStartImport.Enabled = true;
+            }
+            else
+            {
+                progressForm.SetCompleted();
+                btnStartImport.Enabled = true;
+            }
+        }
+
+        private int CountFiles(string path, HashSet<string> excludedFolders)
+        {
+            int count = 0;
+            try
+            {
+                count += Directory.GetFiles(path).Length;
+
+                foreach (string dir in Directory.GetDirectories(path))
+                {
+                    if (excludedFolders.Contains(dir))
+                    {
+                        count++;
+                        continue;
+                    }
+                    count += CountFiles(dir, excludedFolders);
+                }
+            }
+            catch
+            {
+            }
+            return count;
+        }
+
+        private void ImportDirectory(string rootPath, string currentPath, string destPath,
+            string operationType, HashSet<string> excludedFolders,
+            FormImportProgress progressForm, ref int processed)
+        {
+            try
+            {
+                foreach (string file in Directory.GetFiles(currentPath))
+                {
+                    if (progressForm.Cancelled)
+                        return;
+
+                    FileInfo fi = new FileInfo(file);
+                    string relativePath = GetRelativePath(rootPath, file);
+                    string destFullPath = Path.Combine(destPath, relativePath);
+
+                    InsertFileRecord(fi.Name, file, fi.Extension, fi.Length, fi.LastWriteTime,
+                        "File", 0, operationType, file, destFullPath);
+
+                    processed++;
+                    progressForm.SetProgress(processed);
+                }
+
+                foreach (string dir in Directory.GetDirectories(currentPath))
+                {
+                    if (progressForm.Cancelled)
+                        return;
+
+                    DirectoryInfo di = new DirectoryInfo(dir);
+                    bool isExcluded = excludedFolders.Contains(dir);
+                    string relativePath = GetRelativePath(rootPath, dir);
+                    string destFullPath = Path.Combine(destPath, relativePath);
+
+                    if (isExcluded)
+                    {
+                        InsertFileRecord(di.Name, dir, "", 0, di.LastWriteTime,
+                            "Folder", 1, operationType, dir, destFullPath);
+
+                        processed++;
+                        progressForm.SetProgress(processed);
+                    }
+                    else
+                    {
+                        ImportDirectory(rootPath, dir, destPath,
+                            operationType, excludedFolders, progressForm, ref processed);
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private string GetRelativePath(string rootPath, string fullPath)
+        {
+            if (!rootPath.EndsWith("\\"))
+                rootPath += "\\";
+            return fullPath.Substring(rootPath.Length);
+        }
+
+        private void InsertFileRecord(string fileName, string filePath, string extension,
+            long size, DateTime fileModifiedDate, string fileType, int isExcluded,
+            string operationType, string sourcePath, string destPath)
+        {
+            using (MySqlConnection conn = DatabaseConfig.GetConnection())
+            {
+                conn.Open();
+                string query = @"INSERT INTO imported_files
+                    (file_name, file_path, file_extension, file_size, file_modified_date,
+                     file_type, is_excluded, operation_type, source_path, destination_path)
+                    VALUES (@name, @path, @ext, @size, @modified,
+                            @type, @excluded, @operation, @source, @dest)";
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@name", fileName);
+                    cmd.Parameters.AddWithValue("@path", filePath);
+                    cmd.Parameters.AddWithValue("@ext", string.IsNullOrEmpty(extension) ? (object)DBNull.Value : extension);
+                    cmd.Parameters.AddWithValue("@size", size);
+                    cmd.Parameters.AddWithValue("@modified", fileModifiedDate);
+                    cmd.Parameters.AddWithValue("@type", fileType);
+                    cmd.Parameters.AddWithValue("@excluded", isExcluded);
+                    cmd.Parameters.AddWithValue("@operation", operationType);
+                    cmd.Parameters.AddWithValue("@source", sourcePath);
+                    cmd.Parameters.AddWithValue("@dest", destPath);
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
     }
 }

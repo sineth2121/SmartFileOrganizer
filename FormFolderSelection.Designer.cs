@@ -29,7 +29,13 @@
             this.colType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colDeepScanAction = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.lblValidationStatus = new System.Windows.Forms.Label();
+            this.panelImportArea = new System.Windows.Forms.Panel();
+            this.lblOperationType = new System.Windows.Forms.Label();
+            this.rbCopy = new System.Windows.Forms.RadioButton();
+            this.rbCut = new System.Windows.Forms.RadioButton();
+            this.btnStartImport = new System.Windows.Forms.Button();
             this.panelCard.SuspendLayout();
+            this.panelImportArea.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelCard
@@ -44,7 +50,7 @@
             this.panelCard.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelCard.Location = new System.Drawing.Point(0, 0);
             this.panelCard.Name = "panelCard";
-            this.panelCard.Size = new System.Drawing.Size(800, 155);
+            this.panelCard.Size = new System.Drawing.Size(800, 137);
             this.panelCard.TabIndex = 0;
             // 
             // destinationText
@@ -62,7 +68,7 @@
             // 
             this.importText.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Italic);
             this.importText.ForeColor = System.Drawing.SystemColors.WindowFrame;
-            this.importText.Location = new System.Drawing.Point(88, 106);
+            this.importText.Location = new System.Drawing.Point(88, 96);
             this.importText.Name = "importText";
             this.importText.Size = new System.Drawing.Size(432, 24);
             this.importText.TabIndex = 9;
@@ -83,7 +89,7 @@
             // 
             this.lblImport.AutoSize = true;
             this.lblImport.Font = new System.Drawing.Font("Malgun Gothic", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblImport.Location = new System.Drawing.Point(83, 78);
+            this.lblImport.Location = new System.Drawing.Point(83, 68);
             this.lblImport.Name = "lblImport";
             this.lblImport.Size = new System.Drawing.Size(190, 25);
             this.lblImport.TabIndex = 7;
@@ -93,7 +99,7 @@
             // 
             this.btnImport.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.btnImport.Font = new System.Drawing.Font("Malgun Gothic", 10F);
-            this.btnImport.Location = new System.Drawing.Point(653, 94);
+            this.btnImport.Location = new System.Drawing.Point(653, 84);
             this.btnImport.MaximumSize = new System.Drawing.Size(180, 40);
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(106, 40);
@@ -120,7 +126,6 @@
             this.listViewDirectoryContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.listViewDirectoryContent.CheckBoxes = false;
             this.listViewDirectoryContent.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.colItemName,
             this.colType,
@@ -128,9 +133,9 @@
             this.listViewDirectoryContent.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.listViewDirectoryContent.FullRowSelect = true;
             this.listViewDirectoryContent.HideSelection = false;
-            this.listViewDirectoryContent.Location = new System.Drawing.Point(12, 161);
+            this.listViewDirectoryContent.Location = new System.Drawing.Point(12, 143);
             this.listViewDirectoryContent.Name = "listViewDirectoryContent";
-            this.listViewDirectoryContent.Size = new System.Drawing.Size(776, 240);
+            this.listViewDirectoryContent.Size = new System.Drawing.Size(776, 354);
             this.listViewDirectoryContent.TabIndex = 11;
             this.listViewDirectoryContent.UseCompatibleStateImageBehavior = false;
             this.listViewDirectoryContent.View = System.Windows.Forms.View.Details;
@@ -153,29 +158,91 @@
             // 
             // lblValidationStatus
             // 
-            this.lblValidationStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblValidationStatus.AutoSize = true;
             this.lblValidationStatus.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblValidationStatus.Location = new System.Drawing.Point(12, 416);
+            this.lblValidationStatus.Location = new System.Drawing.Point(24, 65);
             this.lblValidationStatus.Name = "lblValidationStatus";
             this.lblValidationStatus.Size = new System.Drawing.Size(0, 23);
             this.lblValidationStatus.TabIndex = 12;
+            // 
+            // panelImportArea
+            // 
+            this.panelImportArea.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
+            this.panelImportArea.Controls.Add(this.lblOperationType);
+            this.panelImportArea.Controls.Add(this.rbCopy);
+            this.panelImportArea.Controls.Add(this.rbCut);
+            this.panelImportArea.Controls.Add(this.btnStartImport);
+            this.panelImportArea.Controls.Add(this.lblValidationStatus);
+            this.panelImportArea.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panelImportArea.Location = new System.Drawing.Point(0, 503);
+            this.panelImportArea.Name = "panelImportArea";
+            this.panelImportArea.Size = new System.Drawing.Size(800, 97);
+            this.panelImportArea.TabIndex = 13;
+            // 
+            // lblOperationType
+            // 
+            this.lblOperationType.AutoSize = true;
+            this.lblOperationType.Font = new System.Drawing.Font("Malgun Gothic", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblOperationType.Location = new System.Drawing.Point(24, 18);
+            this.lblOperationType.Name = "lblOperationType";
+            this.lblOperationType.Size = new System.Drawing.Size(158, 25);
+            this.lblOperationType.TabIndex = 14;
+            this.lblOperationType.Text = "Select Operation :";
+            // 
+            // rbCopy
+            // 
+            this.rbCopy.AutoSize = true;
+            this.rbCopy.Checked = true;
+            this.rbCopy.Font = new System.Drawing.Font("Malgun Gothic", 10F);
+            this.rbCopy.Location = new System.Drawing.Point(210, 18);
+            this.rbCopy.Name = "rbCopy";
+            this.rbCopy.Size = new System.Drawing.Size(186, 29);
+            this.rbCopy.TabIndex = 15;
+            this.rbCopy.TabStop = true;
+            this.rbCopy.Text = "Copy (keep original)";
+            this.rbCopy.UseVisualStyleBackColor = true;
+            // 
+            // rbCut
+            // 
+            this.rbCut.AutoSize = true;
+            this.rbCut.Font = new System.Drawing.Font("Malgun Gothic", 10F);
+            this.rbCut.Location = new System.Drawing.Point(419, 17);
+            this.rbCut.Name = "rbCut";
+            this.rbCut.Size = new System.Drawing.Size(191, 29);
+            this.rbCut.TabIndex = 16;
+            this.rbCut.Text = "Cut  (move files)";
+            this.rbCut.UseVisualStyleBackColor = true;
+            // 
+            // btnStartImport
+            // 
+            this.btnStartImport.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.btnStartImport.BackColor = System.Drawing.Color.PowderBlue;
+            this.btnStartImport.Font = new System.Drawing.Font("Malgun Gothic", 10F, System.Drawing.FontStyle.Bold);
+            this.btnStartImport.Location = new System.Drawing.Point(616, 12);
+            this.btnStartImport.MaximumSize = new System.Drawing.Size(180, 40);
+            this.btnStartImport.Name = "btnStartImport";
+            this.btnStartImport.Size = new System.Drawing.Size(157, 40);
+            this.btnStartImport.TabIndex = 17;
+            this.btnStartImport.Text = "▶ Start Import";
+            this.btnStartImport.UseVisualStyleBackColor = false;
+            this.btnStartImport.Click += new System.EventHandler(this.btnStartImport_Click);
             // 
             // FormFolderSelection
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.InactiveBorder;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.lblValidationStatus);
+            this.ClientSize = new System.Drawing.Size(800, 600);
             this.Controls.Add(this.listViewDirectoryContent);
+            this.Controls.Add(this.panelImportArea);
             this.Controls.Add(this.panelCard);
             this.Name = "FormFolderSelection";
             this.Text = "FormFolderSelection";
             this.panelCard.ResumeLayout(false);
             this.panelCard.PerformLayout();
+            this.panelImportArea.ResumeLayout(false);
+            this.panelImportArea.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -193,5 +260,10 @@
         private System.Windows.Forms.ColumnHeader colType;
         private System.Windows.Forms.ColumnHeader colDeepScanAction;
         private System.Windows.Forms.Label lblValidationStatus;
+        private System.Windows.Forms.Panel panelImportArea;
+        private System.Windows.Forms.Label lblOperationType;
+        private System.Windows.Forms.RadioButton rbCopy;
+        private System.Windows.Forms.RadioButton rbCut;
+        private System.Windows.Forms.Button btnStartImport;
     }
 }
