@@ -16,6 +16,9 @@ namespace SmartFileOrganizer
         private FormFolderSelection folderSelectionForm = null;
         private FormConfigureRules configureRulesForm = null;
         private FormPreviewOrganize previewOrganizeForm = null;
+        private FormOperationHistory operationHistoryForm = null;
+        private FormDuplicateFinder duplicateFinderForm = null;
+        private FormSettings settingsForm = null;
 
         public FormDashboard()
         {
@@ -80,7 +83,21 @@ namespace SmartFileOrganizer
 
         private void btnDuplicateCleaner_Click(object sender, EventArgs e)
         {
+            if (duplicateFinderForm == null)
+            {
+                duplicateFinderForm = new FormDuplicateFinder();
+                OpenChildForm(duplicateFinderForm);
+            }
+            else
+            {
+                if (activeForm != null && activeForm != duplicateFinderForm)
+                    activeForm.Hide();
 
+                activeForm = duplicateFinderForm;
+                panelMain.Tag = duplicateFinderForm;
+                duplicateFinderForm.BringToFront();
+                duplicateFinderForm.Show();
+            }
         }
 
         private void btnScanPreview_Click(object sender, EventArgs e)
@@ -104,7 +121,22 @@ namespace SmartFileOrganizer
 
         private void btnOperationHistory_Click(object sender, EventArgs e)
         {
+            if (operationHistoryForm == null)
+            {
+                operationHistoryForm = new FormOperationHistory();
+                OpenChildForm(operationHistoryForm);
+            }
+            else
+            {
+                if (activeForm != null && activeForm != operationHistoryForm)
+                    activeForm.Hide();
 
+                activeForm = operationHistoryForm;
+                panelMain.Tag = operationHistoryForm;
+                operationHistoryForm.RefreshData();
+                operationHistoryForm.BringToFront();
+                operationHistoryForm.Show();
+            }
         }
 
         private void btnConfigureRules_Click(object sender, EventArgs e)
@@ -128,7 +160,21 @@ namespace SmartFileOrganizer
 
         private void btnSettings_Click(object sender, EventArgs e)
         {
+            if (settingsForm == null)
+            {
+                settingsForm = new FormSettings();
+                OpenChildForm(settingsForm);
+            }
+            else
+            {
+                if (activeForm != null && activeForm != settingsForm)
+                    activeForm.Hide();
 
+                activeForm = settingsForm;
+                panelMain.Tag = settingsForm;
+                settingsForm.BringToFront();
+                settingsForm.Show();
+            }
         }
 
         private void label2_Click(object sender, EventArgs e)

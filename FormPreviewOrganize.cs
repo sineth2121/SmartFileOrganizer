@@ -145,14 +145,14 @@ namespace SmartFileOrganizer
                     }
 
                     using (MySqlCommand countCmd = new MySqlCommand(
-                        "SELECT COUNT(*) FROM imported_files WHERE file_type = 'File'", conn))
+                        "SELECT COUNT(*) FROM imported_files WHERE file_type = 'File' OR (file_type = 'Folder' AND is_excluded = 1)", conn))
                     {
                         totalFiles = Convert.ToInt32(countCmd.ExecuteScalar());
                     }
 
                     if (totalFiles == 0)
                     {
-                        lblProgressStatus.Text = "No files to process. Import files first.";
+                        lblProgressStatus.Text = "No items to process. Import files first.";
                         return;
                     }
 
@@ -164,7 +164,7 @@ namespace SmartFileOrganizer
                     UpdateStats();
 
                     using (MySqlCommand readCmd = new MySqlCommand(
-                        "SELECT id, file_name, file_extension, file_modified_date FROM imported_files WHERE file_type = 'File' ORDER BY id ASC", conn))
+                        "SELECT id, file_name, file_extension, file_modified_date, file_type, file_path FROM imported_files WHERE file_type = 'File' OR (file_type = 'Folder' AND is_excluded = 1) ORDER BY id ASC", conn))
                     using (MySqlDataReader reader = readCmd.ExecuteReader())
                     {
                         List<(int id, string predicted, bool matched)> updates = new List<(int, string, bool)>();
@@ -174,9 +174,12 @@ namespace SmartFileOrganizer
                         {
                             int id = Convert.ToInt32(reader["id"]);
                             string fileName = reader["file_name"].ToString();
-                            string extension = reader["file_extension"] != DBNull.Value ? reader["file_extension"].ToString() : "";
+                            string rawExtension = reader["file_extension"] != DBNull.Value ? reader["file_extension"].ToString() : "";
+                            string fileType = reader["file_type"].ToString();
                             DateTime? modifiedDate = reader["file_modified_date"] != DBNull.Value
                                 ? Convert.ToDateTime(reader["file_modified_date"]) : (DateTime?)null;
+
+                            string extension = fileType == "Folder" ? "folder" : rawExtension;
 
                             string predictedDest = null;
                             bool matched = false;
@@ -522,7 +525,240 @@ namespace SmartFileOrganizer
 
         private void btnExecuteOrganize_Click(object sender, EventArgs e)
         {
+            if (!LoadBaseDestinationPath())
+            {
+                MessageBox.Show("No destination folder configured.", "Configuration Missing",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
+            DialogResult result = MessageBox.Show(
+                "This will " + (UseMoveOperation() ? "move" : "copy") +
+                " all imported files to their predicted destinations.\n\n" +
+                "• Matched files → rule-based subfolders\n" +
+                "• Unmatched files → Unorganized_Items\n\n" +
+                "Continue?",
+                "Confirm Organization",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            btnExecuteOrganize.Enabled = false;
+            btnPreparePreview.Enabled = false;
+
+            int successCount = 0;
+            int failCount = 0;
+
+            try
+            {
+                List<(int id, string fileName, string sourcePath, string operationType, string predictedDest, long fileSize, string fileType)> fileList = new List<(int, string, string, string, string, long, string)>();
+
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+
+                    using (MySqlCommand countCmd = new MySqlCommand(
+                        "SELECT COUNT(*) FROM imported_files WHERE predicted_destination IS NOT NULL AND (file_type = 'File' OR (file_type = 'Folder' AND is_excluded = 1))", conn))
+                    {
+                        int total = Convert.ToInt32(countCmd.ExecuteScalar());
+                        if (total == 0)
+                        {
+                            MessageBox.Show("No files to organize. Run Prepare Preview first.",
+                                "Nothing to Do", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return;
+                        }
+
+                        prgOrganizeProgress.Maximum = total;
+                        prgOrganizeProgress.Value = 0;
+
+                        using (MySqlCommand readCmd = new MySqlCommand(
+                            "SELECT id, file_name, file_path, source_path, file_size, operation_type, predicted_destination, file_type " +
+                            "FROM imported_files WHERE predicted_destination IS NOT NULL AND (file_type = 'File' OR (file_type = 'Folder' AND is_excluded = 1)) ORDER BY id", conn))
+                        using (MySqlDataReader reader = readCmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                int id = Convert.ToInt32(reader["id"]);
+                                string fileName = reader["file_name"].ToString();
+                                string filePath = reader["file_path"].ToString();
+                                string sourcePath = reader["source_path"] != DBNull.Value ? reader["source_path"].ToString() : filePath;
+                                string opType = reader["operation_type"].ToString();
+                                string predDest = reader["predicted_destination"].ToString();
+                                long size = reader["file_size"] != DBNull.Value ? Convert.ToInt64(reader["file_size"]) : 0;
+                                string fileType = reader["file_type"].ToString();
+                                fileList.Add((id, fileName, sourcePath, opType, predDest, size, fileType));
+                            }
+                        }
+                    }
+                }
+
+                int index = 0;
+                bool isMove = UseMoveOperation();
+                string executionId = Guid.NewGuid().ToString();
+
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+
+                    foreach (var file in fileList)
+                    {
+                        index++;
+                        bool isFolder = file.fileType == "Folder";
+                        lblProgressStatus.Text = $"[{index}/{fileList.Count}] {(isMove ? "Moving" : "Copying")}: {file.fileName}";
+                        prgOrganizeProgress.Value = Math.Min(index, fileList.Count);
+                        Application.DoEvents();
+
+                        string status = "SUCCESS";
+                        string errorMsg = null;
+
+                        try
+                        {
+                            if (isFolder)
+                            {
+                                if (!Directory.Exists(file.sourcePath))
+                                    throw new DirectoryNotFoundException($"Source folder not found: {file.sourcePath}");
+
+                                if (isMove)
+                                {
+                                    if (Directory.Exists(file.predictedDest))
+                                        Directory.Delete(file.predictedDest, recursive: true);
+                                    Directory.Move(file.sourcePath, file.predictedDest);
+                                }
+                                else
+                                {
+                                    CopyDirectoryRecursive(file.sourcePath, file.predictedDest);
+                                }
+                            }
+                            else
+                            {
+                                string destDir = Path.GetDirectoryName(file.predictedDest);
+                                if (!string.IsNullOrEmpty(destDir) && !Directory.Exists(destDir))
+                                    Directory.CreateDirectory(destDir);
+
+                                if (!File.Exists(file.sourcePath))
+                                    throw new FileNotFoundException($"Source file not found: {file.sourcePath}");
+
+                                if (isMove)
+                                {
+                                    if (File.Exists(file.predictedDest))
+                                        File.Delete(file.predictedDest);
+                                    File.Move(file.sourcePath, file.predictedDest);
+                                }
+                                else
+                                {
+                                    File.Copy(file.sourcePath, file.predictedDest, overwrite: true);
+                                }
+                            }
+
+                            successCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            status = "FAILED";
+                            errorMsg = ex.Message;
+                            failCount++;
+                        }
+
+                        using (MySqlCommand logCmd = new MySqlCommand(
+                            "INSERT INTO operation_history (execution_id, operation_type, file_name, source_path, destination_path, file_size, status) " +
+                            "VALUES (@execId, @opType, @name, @source, @dest, @size, @status)", conn))
+                        {
+                            logCmd.Parameters.AddWithValue("@execId", executionId);
+                            logCmd.Parameters.AddWithValue("@opType", isMove ? "Move" : "Copy");
+                            logCmd.Parameters.AddWithValue("@name", file.fileName);
+                            logCmd.Parameters.AddWithValue("@source", TruncatePath(file.sourcePath, 500));
+                            logCmd.Parameters.AddWithValue("@dest", TruncatePath(file.predictedDest, 500));
+                            logCmd.Parameters.AddWithValue("@size", file.fileSize);
+                            logCmd.Parameters.AddWithValue("@status", status + (errorMsg != null ? ": " + errorMsg : ""));
+                            logCmd.ExecuteNonQuery();
+                        }
+
+                        using (MySqlCommand updateCmd = new MySqlCommand(
+                            "UPDATE imported_files SET destination_path = @dest WHERE id = @id", conn))
+                        {
+                            updateCmd.Parameters.AddWithValue("@dest", file.predictedDest);
+                            updateCmd.Parameters.AddWithValue("@id", file.id);
+                            updateCmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    using (MySqlCommand archiveCmd = new MySqlCommand(
+                        "INSERT INTO destination_file_data (execution_id, file_name, file_extension, file_size, file_modified_date, file_type, is_excluded, operation_type, source_path, destination_path) " +
+                        "SELECT @execId, file_name, file_extension, file_size, file_modified_date, file_type, is_excluded, operation_type, source_path, destination_path " +
+                        "FROM imported_files WHERE predicted_destination IS NOT NULL", conn))
+                    {
+                        archiveCmd.Parameters.AddWithValue("@execId", executionId);
+                        archiveCmd.ExecuteNonQuery();
+                    }
+
+                    using (MySqlCommand clearCmd = new MySqlCommand(
+                        "DELETE FROM imported_files WHERE predicted_destination IS NOT NULL", conn))
+                    {
+                        clearCmd.ExecuteNonQuery();
+                    }
+                }
+
+                lblProgressStatus.Text = $"Organization complete — {successCount} succeeded, {failCount} failed.";
+                MessageBox.Show(
+                    $"Organization {(isMove ? "move" : "copy")} completed.\n\n" +
+                    $"✓ Successful: {successCount}\n" +
+                    $"✗ Failed: {failCount}",
+                    "Organization Complete",
+                    MessageBoxButtons.OK,
+                    failCount > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error during organization: " + ex.Message,
+                    "Organization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnExecuteOrganize.Enabled = true;
+                btnPreparePreview.Enabled = true;
+            }
+        }
+
+        private bool UseMoveOperation()
+        {
+            try
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT operation_type FROM imported_files WHERE operation_type IS NOT NULL LIMIT 1", conn))
+                    {
+                        object result = cmd.ExecuteScalar();
+                        return result != null && result.ToString().Equals("Move", StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private string TruncatePath(string path, int maxLen)
+        {
+            if (string.IsNullOrEmpty(path) || path.Length <= maxLen)
+                return path;
+            return path.Substring(0, maxLen);
+        }
+
+        private static void CopyDirectoryRecursive(string sourceDir, string destDir)
+        {
+            Directory.CreateDirectory(destDir);
+            foreach (string file in Directory.GetFiles(sourceDir))
+            {
+                string dest = Path.Combine(destDir, Path.GetFileName(file));
+                File.Copy(file, dest, overwrite: true);
+            }
+            foreach (string dir in Directory.GetDirectories(sourceDir))
+            {
+                string dest = Path.Combine(destDir, Path.GetFileName(dir));
+                CopyDirectoryRecursive(dir, dest);
+            }
         }
 
         private void lblProgressStatus_Click(object sender, EventArgs e)

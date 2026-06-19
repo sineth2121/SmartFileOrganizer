@@ -111,6 +111,7 @@ namespace SmartFileOrganizer
 
                     string createOperationHistory = @"CREATE TABLE IF NOT EXISTS operation_history (
                         id INT AUTO_INCREMENT PRIMARY KEY,
+                        execution_id VARCHAR(36) NULL,
                         operation_type VARCHAR(50) NOT NULL,
                         file_name VARCHAR(255) NULL,
                         source_path VARCHAR(500) NULL,
@@ -134,6 +135,22 @@ namespace SmartFileOrganizer
                         FOREIGN KEY (execution_id) REFERENCES operation_history(id) ON DELETE SET NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+                    string createDestFileData = @"CREATE TABLE IF NOT EXISTS destination_file_data (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        execution_id VARCHAR(36) NULL,
+                        file_name VARCHAR(255) NOT NULL,
+                        file_extension VARCHAR(50) NULL,
+                        file_size BIGINT NOT NULL DEFAULT 0,
+                        file_modified_date DATETIME NULL,
+                        file_type VARCHAR(20) NOT NULL DEFAULT 'File',
+                        is_excluded TINYINT(1) NOT NULL DEFAULT 0,
+                        operation_type VARCHAR(10) NOT NULL DEFAULT 'Copy',
+                        source_path TEXT NULL,
+                        destination_path TEXT NULL,
+                        file_hash VARCHAR(64) NULL,
+                        imported_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
                     using (MySqlCommand cmd = new MySqlCommand(createAppSettings, conn))
                         cmd.ExecuteNonQuery();
                     using (MySqlCommand cmd = new MySqlCommand(createImportedFiles, conn))
@@ -141,6 +158,8 @@ namespace SmartFileOrganizer
                     using (MySqlCommand cmd = new MySqlCommand(createOperationHistory, conn))
                         cmd.ExecuteNonQuery();
                     using (MySqlCommand cmd = new MySqlCommand(createOrgRules, conn))
+                        cmd.ExecuteNonQuery();
+                    using (MySqlCommand cmd = new MySqlCommand(createDestFileData, conn))
                         cmd.ExecuteNonQuery();
 
                 }
@@ -380,7 +399,7 @@ namespace SmartFileOrganizer
                 return;
             }
 
-            string operationType = rbCopy.Checked ? "Copy" : "Cut";
+            string operationType = rbCopy.Checked ? "Copy" : "Move";
 
             HashSet<string> excludedFolders = new HashSet<string>();
             foreach (ListViewItem item in listViewDirectoryContent.Items)
