@@ -11,3 +11,7 @@ packages/
 .vs/
 .vscode/
 *.csproj.user
+
+## Test data
+TestData/
+Test_Output_Folder/
