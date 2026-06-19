@@ -5,12 +5,13 @@ namespace SmartFileOrganizer
 {
     public partial class FormImportProgress : Form
     {
-        public bool Cancelled { get; private set; } = false;
+        public bool Cancelled { get; private set; }
         private bool importingComplete = false;
 
         public FormImportProgress()
         {
             InitializeComponent();
+            Cancelled = false;
         }
 
         public void SetStatus(string text)

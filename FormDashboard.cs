@@ -15,6 +15,7 @@ namespace SmartFileOrganizer
         private Form activeForm = null;
         private FormFolderSelection folderSelectionForm = null;
         private FormConfigureRules configureRulesForm = null;
+        private FormPreviewOrganize previewOrganizeForm = null;
 
         public FormDashboard()
         {
@@ -84,7 +85,21 @@ namespace SmartFileOrganizer
 
         private void btnScanPreview_Click(object sender, EventArgs e)
         {
+            if (previewOrganizeForm == null)
+            {
+                previewOrganizeForm = new FormPreviewOrganize();
+                OpenChildForm(previewOrganizeForm);
+            }
+            else
+            {
+                if (activeForm != null && activeForm != previewOrganizeForm)
+                    activeForm.Hide();
 
+                activeForm = previewOrganizeForm;
+                panelMain.Tag = previewOrganizeForm;
+                previewOrganizeForm.BringToFront();
+                previewOrganizeForm.Show();
+            }
         }
 
         private void btnOperationHistory_Click(object sender, EventArgs e)

@@ -122,6 +122,12 @@
     <Compile Include="FormImportProgress.Designer.cs">
       <DependentUpon>FormImportProgress.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormPreviewOrganize.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormPreviewOrganize.Designer.cs">
+      <DependentUpon>FormPreviewOrganize.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="FormDashboard.resx">
@@ -135,6 +141,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormImportProgress.resx">
       <DependentUpon>FormImportProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormPreviewOrganize.resx">
+      <DependentUpon>FormPreviewOrganize.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
