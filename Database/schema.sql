@@ -1,17 +1,9 @@
--- ============================================================
--- SmartFileOrganizer — Full Database Schema
--- Run once via MySQL CLI or phpMyAdmin SQL tab.
--- ============================================================
 
 CREATE DATABASE IF NOT EXISTS smart_file_organizer
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
 USE smart_file_organizer;
-
--- ============================================================
--- app_settings — key-value settings store
--- ============================================================
 CREATE TABLE IF NOT EXISTS app_settings (
     id              INT             AUTO_INCREMENT PRIMARY KEY,
     setting_key     VARCHAR(100)    NOT NULL UNIQUE,
@@ -19,9 +11,6 @@ CREATE TABLE IF NOT EXISTS app_settings (
     updated_at      DATETIME        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================================
--- imported_files — imported file metadata
--- ============================================================
 CREATE TABLE IF NOT EXISTS imported_files (
     id                  INT             AUTO_INCREMENT PRIMARY KEY,
     file_name           VARCHAR(255)    NOT NULL,
@@ -38,9 +27,7 @@ CREATE TABLE IF NOT EXISTS imported_files (
     imported_date       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================================
--- operation_history — audit log for file operations
--- ============================================================
+
 CREATE TABLE IF NOT EXISTS operation_history (
     id                  INT             AUTO_INCREMENT PRIMARY KEY,
     execution_id        VARCHAR(36)     NULL,
@@ -53,9 +40,7 @@ CREATE TABLE IF NOT EXISTS operation_history (
     performed_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================================
--- organization_rules — automation rules for file routing
--- ============================================================
+
 CREATE TABLE IF NOT EXISTS organization_rules (
     id                      INT             AUTO_INCREMENT PRIMARY KEY,
     rule_name               VARCHAR(255)    NOT NULL,
@@ -72,9 +57,7 @@ CREATE TABLE IF NOT EXISTS organization_rules (
     FOREIGN KEY (execution_id) REFERENCES operation_history(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================================
--- destination_file_data — files that have been organized
--- ============================================================
+
 CREATE TABLE IF NOT EXISTS destination_file_data (
     id                  INT             AUTO_INCREMENT PRIMARY KEY,
     execution_id        VARCHAR(36)     NULL,
@@ -91,12 +74,9 @@ CREATE TABLE IF NOT EXISTS destination_file_data (
     imported_date       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================================
+
 -- Upgrade existing tables — add missing columns if upgrading
--- from an older version. Run these one at a time; it is
--- safe to ignore "Duplicate column" errors for columns
--- that already exist.
--- ============================================================
+
 ALTER TABLE organization_rules ADD COLUMN size_min BIGINT NULL AFTER keyword_match;
 ALTER TABLE organization_rules ADD COLUMN size_max BIGINT NULL AFTER size_min;
 ALTER TABLE operation_history ADD COLUMN execution_id VARCHAR(36) NULL AFTER id;
