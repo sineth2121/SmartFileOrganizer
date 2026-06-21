@@ -477,7 +477,6 @@ namespace SmartFileOrganizer
                 }
             }
 
-            // Remove deleted files from sets and rebuild
             RemoveDeletedFromSets();
 
             lblStatus.Text = $"Deleted {successCount} file(s), {failCount} failed.";

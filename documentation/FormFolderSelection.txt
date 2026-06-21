@@ -1,0 +1,162 @@
+================================================================================
+  FormFolderSelection.cs — Source Folder Selection & Import
+================================================================================
+  File:      FormFolderSelection.cs (513 lines)
+  Designer:  FormFolderSelection.Designer.cs
+  Resx:      FormFolderSelection.resx
+  Namespace: SmartFileOrganizer
+  Class:     FormFolderSelection : Form (partial)
+================================================================================
+
+1. PURPOSE
+   - Allows the user to select a source folder and a base destination folder
+   - Provides a visual directory viewer with toggleable folder exclusions
+   - Initiates the import process: scanning all files and inserting them into
+     the imported_files database table
+   - Supports Copy or Move operation type via radio buttons
+
+2. FIELDS & PROPERTIES
+   - private bool hasSubfolders = false
+     Tracks whether the selected source has subdirectories
+
+3. CONSTRUCTOR
+   - public FormFolderSelection()
+   - Calls InitializeComponent()
+   - Sets form title to "Folder Selection"
+   - Calls SetupCheckboxImageList() to create custom checkbox icons
+   - Reads destination_folder_path from app_settings and populates
+     destinationText
+
+4. METHODS — UI SETUP
+
+   private void SetupCheckboxImageList() (line 44)
+   - Creates an ImageList with 16x16 images at Depth32Bit
+   - Image 0: Unchecked — draws 2px gray rectangle border on transparent bg
+   - Image 1: Checked — draws rectangle + a "✓" character
+   - Assigns to listViewDirectoryContent.StateImageList
+
+5. EVENTS / EVENT HANDLERS
+
+   btnImport_Click (line 79)
+   - Shows FolderBrowserDialog for source folder selection
+   - Sets importText, calls PopulateDirectoryViewer()
+
+   btnDestination_Click (line 210)
+   - Shows FolderBrowserDialog for base destination folder
+   - If destination already exists in DB, warns user that changing it will
+     reset the database and history
+   - On confirm: deletes the old destination_folder_path setting, then inserts
+     the new one
+   - Uses INSERT ON DUPLICATE KEY UPDATE
+
+   listViewDirectoryContent_MouseClick (line 142)
+   - Custom checkbox toggling for folder items
+   - On click: toggles StateImageIndex between 0 (unchecked) and 1 (checked)
+   - When checked: subfolder text shows "EXCLUDED (Move folder whole, skip
+     inside)", background turns gray
+   - When unchecked: subfolder text shows "Scan Subfolders", bg white
+   - Calls EvaluateValidationRules()
+
+   btnStartImport_Click (line 296)
+   - Validates source and destination paths
+   - Determines operation type from rbCopy/rbMove radio buttons
+   - Collects excluded folder paths from listViewDirectoryContent (folders
+     with StateImageIndex == 1)
+   - Clears imported_files table (DELETE FROM imported_files)
+   - Opens FormImportProgress as non-modal progress window
+   - Calls CountFiles() to determine total files
+   - If 0 files: closes progress form and returns
+   - Otherwise: sets total on progress form, then calls ImportDirectory()
+   - If cancelled: clears imported_files table, closes progress form
+   - If completed: calls IncrementImportCounter() and SetCompleted()
+
+   importText_TextChanged / destinationText_TextChanged (lines 286, 291)
+   - Empty event handlers (no logic)
+
+6. KEY METHODS
+
+   private void PopulateDirectoryViewer(string folderPath) (line 95)
+   - Lists all subdirectories and files in the selected folder
+   - Each subdirectory: ListViewItem with sub-items "Folder", "Scan Subfolders"
+     and StateImageIndex = 0 (unchecked)
+   - Each file: ListViewItem with "File", "Process Directly" and
+     StateImageIndex = -1 (no checkbox)
+   - Sets hasSubfolders = true if any directories exist
+   - Calls EvaluateValidationRules()
+
+   private void EvaluateValidationRules() (line 170)
+   - Updates lblValidationStatus based on folder exclusion state
+   - If no subfolders: "Ready: No subfolders detected..."
+   - If subfolders exist but none excluded: prompts user to tick folders
+   - If subfolders with exclusions: shows "✓ Success: N of M folders restricted"
+
+   private int CountFiles(string path, HashSet<string> excludedFolders) (line 372)
+   - Recursively counts files in directory tree
+   - If a directory is in excludedFolders, counts it as 1 (whole folder treated
+     as a single item) and skips recursion
+   - Returns total count
+
+   private void ImportDirectory(string rootPath, string currentPath,
+       string destPath, string operationType, HashSet<string> excludedFolders,
+       FormImportProgress progressForm, ref int processed) (line 395)
+   - Recursively processes the source directory
+   - For each file: computes relative path, builds destination path,
+     calls InsertFileRecord() with type="File", is_excluded=0
+   - For each subdirectory:
+     * If excluded: InsertFileRecord() with type="Folder", is_excluded=1,
+       then skip recursion (folder moved as whole unit)
+     * If not excluded: recurse into subdirectory
+   - Cancellation is checked between each operation
+
+   private string GetRelativePath(string rootPath, string fullPath) (line 447)
+   - Computes relative path by removing rootPath prefix
+   - Ensures rootPath ends with backslash before substring
+
+   private void InsertFileRecord(string fileName, string filePath,
+       string extension, long size, DateTime fileModifiedDate, string fileType,
+       int isExcluded, string operationType, string sourcePath,
+       string destPath) (line 454)
+   - Inserts a single row into imported_files table
+   - Columns: file_name, file_path, file_extension, file_size,
+     file_modified_date, file_type, is_excluded, operation_type, source_path,
+     destination_path
+   - Empty extension is stored as DBNull
+
+   private void IncrementImportCounter(int newFiles) (line 483)
+   - Reads current total_files_imported from app_settings
+   - Adds new file count, writes back using INSERT ON DUPLICATE KEY UPDATE
+
+7. UI CONTROLS (defined in Designer)
+   - importText: Source folder path textbox
+   - destinationText: Destination folder path textbox
+   - btnImport: Browse source folder button
+   - btnDestination: Browse/set destination button
+   - listViewDirectoryContent: ListView showing folder/file contents with
+     custom state image checkboxes
+   - rbCopy / rbMove: Radio buttons for operation type
+   - btnStartImport: Starts the import process
+   - lblValidationStatus: Status label for folder exclusion validation
+
+8. DATABASE TABLES USED
+   - app_settings: Reads/writes destination_folder_path,
+     reads/writes total_files_imported
+   - imported_files: Cleared on start, populated with all imported file
+     records during import
+
+9. IMPORT PROCESS FLOW
+   User selects source folder → directory displayed in listView →
+   user toggles folder exclusions → user selects Copy or Move →
+   clicks Start Import → imported_files table cleared →
+   FormImportProgress shown → recursive file counting →
+   recursive import (InsertFileRecord for each file/folder) →
+   if cancelled: imported_files cleared, progress closed →
+   if done: counter incremented, SetCompleted() called
+
+10. FOLDER EXCLUSION MECHANISM
+    - Only folders (not files) can be excluded
+    - Excluded folders are stored with type="Folder" and is_excluded=1
+    - During organization (FormPreviewOrganize), excluded folders are moved/
+      copied as whole units to the destination, skipping recursive scanning
+      of their contents
+    - This is for folders like "System Volume Information" or .git that
+      should be preserved but not individually organized

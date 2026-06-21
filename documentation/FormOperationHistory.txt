@@ -1,0 +1,128 @@
+================================================================================
+  FormOperationHistory.cs — View and Undo Past Operations
+================================================================================
+  File:      FormOperationHistory.cs (333 lines)
+  Designer:  FormOperationHistory.Designer.cs
+  Resx:      FormOperationHistory.resx
+  Namespace: SmartFileOrganizer
+  Class:     FormOperationHistory : Form (partial)
+================================================================================
+
+1. PURPOSE
+   - Displays a list of past file organization executions (grouped by
+     execution_id from operation_history table)
+   - Allows drilling into individual execution details
+   - Provides Undo functionality to revert Copy or Move operations
+   - Provides Clear History to delete all log records
+
+2. FIELDS & PROPERTIES
+   - private string selectedExecutionId = null
+     Stores the execution_id of the currently selected execution for undo
+
+3. CONSTRUCTOR
+   - public FormOperationHistory()
+   - Calls InitializeComponent()
+
+4. TWO-PANEL LAYOUT
+   - panelListView (visible by default): Shows lvExecutions (list of all
+     past executions grouped by execution_id)
+   - panelDetailView (hidden by default): Shows lvOperationFiles (individual
+     files in selected execution) + btnBack to return
+
+5. EVENTS / EVENT HANDLERS
+
+   FormOperationHistory_Load (line 25)
+   - Calls LoadExecutions()
+
+   lvExecutions_Click (line 94)
+   - Gets execution_id from selected item's Tag
+   - Calls ShowExecutionDetail(execId)
+   - Switches to detail view
+
+   btnBack_Click (line 160)
+   - Hides panelDetailView, shows panelListView, hides btnBack
+   - Clears selectedExecutionId
+
+   btnClearHistory_Click (line 169)
+   - Confirms with user (warns: files on disk NOT affected)
+   - Executes DELETE FROM operation_history
+   - Resets view to list, reloads executions
+
+   btnUndo_Click (line 208)
+   - Validates that an execution is selected
+   - Confirms: explains Copy vs Move undo behavior
+   - Reads all SUCCESS records for the execution (ORDER BY id DESC —
+     reverse order to undo in reverse execution order)
+   - For Copy: File.Delete(entry.destPath)
+   - For Move:
+     1. Creates source directory if it doesn't exist
+     2. Deletes source file if it still exists (to avoid conflict)
+     3. File.Move(entry.destPath, entry.sourcePath)
+   - Updates progress bar/status during undo
+   - Refreshes the detail view after completion
+
+6. KEY METHODS
+
+   public void RefreshData() (line 20)
+   - Called by FormDashboard when navigating to this form
+   - Calls LoadExecutions()
+
+   private void LoadExecutions() (line 30)
+   - Queries operation_history grouped by execution_id and operation_type
+   - SQL aggregation:
+     * execution_id, operation_type, COUNT(*) as file_count,
+       SUM(file_size) as total_size,
+       SUM(CASE WHEN status LIKE 'SUCCESS%' THEN 1 ELSE 0 END) as success_count,
+       SUM(CASE WHEN status LIKE 'FAILED%' THEN 1 ELSE 0 END) as fail_count,
+       MIN(performed_at) as first_time
+   - Ordered by first_time DESC (most recent first)
+   - Columns: Time, Operation Type, File Count, Total Size, Success Count,
+     Fail Count, Execution ID
+   - Tags each item with execution_id
+
+   private string FormatSize(long bytes) (line 86)
+   - B, KB, MB, GB formatting
+
+   private void ShowExecutionDetail(string execId) (line 107)
+   - Switches to detail view
+   - Queries all records for that execution_id ORDER BY id ASC
+   - Columns: File Name, Operation Type, Size, Status (✓/✗), Source Path
+   - Shows info line: "Execution: N files | timestamp | operation_type"
+
+7. UI CONTROLS (defined in Designer)
+   - lvExecutions: ListView grouped by execution (main list)
+   - lvOperationFiles: ListView showing individual file operations (detail)
+   - btnBack: Return from detail to list view
+   - btnClearHistory: Delete all history records
+   - btnUndo: Undo the selected execution
+   - prgUndoProgress: Progress bar during undo
+   - lblUndoStatus: Status text during undo
+   - lblTitle: Title text
+   - lblSelectedInfo: Info about selected execution
+
+8. DATABASE TABLE USED
+   - operation_history: SELECT (aggregated for list, detailed for detail view),
+     DELETE (clear all), SELECT for undo (ORDER BY id DESC, status LIKE
+     'SUCCESS%')
+     Columns: execution_id, operation_type, file_name, source_path,
+     destination_path, file_size, status, performed_at
+
+9. UNDO LOGIC
+   ┌─────────┬─────────────────────────────────────────────┐
+   │ Op Type │ Undo Action                                 │
+   ├─────────┼─────────────────────────────────────────────┤
+   │ Copy    │ Delete the file from destination_path       │
+   │ Move    │ Move file back from destination to source,  │
+   │         │ recreating source directories as needed     │
+   └─────────┴─────────────────────────────────────────────┘
+   - Files are processed in REVERSE order (DESC by id) to safely undo the
+     last operation first
+   - Only records with status starting with "SUCCESS" are processed
+   - The undo itself is NOT logged (no reverse entry in operation_history)
+
+10. ARCHITECTURE NOTES
+    - Clear history only affects DB records, NOT files on disk
+    - Undo only works for executions with at least one SUCCESS record
+    - The undo modifies actual files on disk — it is destructive if misused
+    - Detail view refreshes after undo but the list view does NOT automatically
+      refresh the execution list

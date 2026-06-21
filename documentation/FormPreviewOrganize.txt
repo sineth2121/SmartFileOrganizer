@@ -1,0 +1,238 @@
+================================================================================
+  FormPreviewOrganize.cs — Preview and Execute Organization
+================================================================================
+  File:      FormPreviewOrganize.cs (891 lines) — Largest form
+  Designer:  FormPreviewOrganize.Designer.cs
+  Resx:      FormPreviewOrganize.resx
+  Namespace: SmartFileOrganizer
+  Class:     FormPreviewOrganize : Form (partial)
+================================================================================
+
+1. PURPOSE
+   - The core execution engine of the application
+   - Applies organization rules to imported files, shows a preview tree,
+     then executes the actual file copy/move operations
+   - Two phases: Prepare Preview (read-only) and Execute Organize (writes)
+
+2. PRIVATE INNER CLASS
+
+   private class Rule (line 15)
+   - Properties: Id, Name, ExtCategory, AgeDays, KeywordMatch, SizeMin,
+     SizeMax, DestinationSubfolder
+   - Mapped directly from organization_rules table
+
+3. FIELDS & PROPERTIES
+   - private string baseDestinationPath = ""
+     Read from app_settings; base folder for all organized output
+   - private int totalFiles = 0
+     Count of files/folders to process
+   - private int matchedCount = 0
+     Count of items matched by a rule
+   - private int unmatchedCount = 0
+     Count of items without a matching rule (go to Unorganized_Items)
+
+4. CONSTRUCTOR
+   - public FormPreviewOrganize()
+   - Calls InitializeComponent() then PopulatePlaceholderIcons() and
+     PopulateTreeIcons()
+
+5. ICON GENERATION METHODS
+
+   private void PopulatePlaceholderIcons() (line 39)
+   - Populates lvFolderContents.LargeImageList with placeholder icons:
+     Folder (tan "F"), Document (blue "D"), Image (green "I"),
+     Video (pink "V"), Audio (purple "A"), Archive (gold "Z"),
+     Code (green "C"), Executable (red "E"), GenericFile (gray "F")
+   - Each icon is drawn programmatically using CreatePlaceholderIcon()
+
+   private void PopulateTreeIcons() (line 66)
+   - Populates tvDestinationPreview.ImageList with folder and file icons
+     (similarly drawn programmatically)
+
+   private Bitmap CreatePlaceholderIcon(Color backColor, string letter,
+       Color letterColor, int size) (line 98)
+   - Draws a colored rectangle with a centered letter
+   - Used for all icon generation
+
+6. EXTENSION CHECK METHODS (all static, lines 569-616)
+   - IsImageExt(ext): png, jpg, jpeg, gif, bmp, tiff, tif, webp, svg, ico,
+     heic, raw
+   - IsVideoExt(ext): mp4, mkv, avi, mov, wmv, flv, webm, m4v, 3gp, mpeg, mpg
+   - IsAudioExt(ext): mp3, wav, flac, aac, ogg, wma, m4a
+   - IsArchiveExt(ext): zip, rar, 7z, tar, gz, bz2
+   - IsCodeExt(ext): cs, py, js, ts, java, cpp, c, h, css, sql, php, rb, go,
+     rs, swift, kt, sh, bat, ps1
+   - IsExecutableExt(ext): exe, msi, dll
+   - IsDocumentExt(ext): pdf, doc, docx, xls, xlsx, ppt, pptx, odt, ods, odp,
+     rtf, csv, xml, json, md, html, htm, txt
+
+7. EVENTS / EVENT HANDLERS
+
+   FormPreviewOrganize_Load (line 126)
+   - Empty handler
+
+   btnPreparePreview_Click (line 131)
+   - PHASE 1: Preview generation (read-only)
+   - Loads base destination path from app_settings
+   - Loads all active rules from organization_rules (ORDER BY id ASC)
+   - Clears predicted_destination in imported_files
+   - Counts items: WHERE file_type='File' OR (file_type='Folder' AND
+     is_excluded=1)
+   - For each item, iterates through rules in order; first match wins
+   - If no match: predicted_destination = baseDestinationPath\Unorganized_Items
+   - Updates imported_files.predicted_destination for each item
+   - Calls PopulatePreviewTree() to build TreeView
+   - Updates stats labels (total, matched, unmatched)
+
+   btnExecuteOrganize_Click (line 618)
+   - PHASE 2: File operation execution (writes to disk)
+   - Confirms with user (shows Move vs Copy based on operation_type)
+   - Loads all items with predicted_destination (same filter as preview)
+   - Generates a unique execution_id via GenerateExecutionId()
+   - For each item:
+     * Files: creates destination directory, performs File.Copy or File.Move
+     * Folders: performs Directory.Move or CopyDirectoryRecursive()
+     * Logs to operation_history via INSERT
+     * Updates imported_files.destination_path
+   - Archives processed items to destination_file_data table via
+     INSERT ... SELECT
+   - Deletes processed items from imported_files
+
+   tvDestinationPreview_AfterSelect (line 490)
+   - Calls PopulateContentsList() to show files in selected folder
+
+8. KEY METHODS
+
+   private bool LoadBaseDestinationPath() (line 259)
+   - Reads destination_folder_path from app_settings
+   - Returns false if not configured
+
+   private List<Rule> LoadRules() (line 282)
+   - Reads all active rules from organization_rules (ORDER BY id ASC)
+   - Returns a list of Rule objects
+
+   private bool FileMatchesRule(string fileName, string extension,
+       DateTime? modifiedDate, long fileSize, Rule rule) (line 321)
+   - Tests a file against a rule's conditions
+   - ALL conditions are AND'd together (extMatch && ageMatch && keywordMatch
+     && sizeMatch)
+   - Extension matching:
+     * Parses extensions from parenthesized list via ParseExtensions()
+     * E.g., "Documents (.pdf,.docx,.txt)" → ["pdf", "docx", "txt"]
+     * Removes leading dot, case-insensitive comparison
+   - Age matching:
+     * Parses age range strings via ParseAgeDays()
+     * Examples: "This Month (< 30 Days)" → (null, 30)
+     * "Recent (60–180 Days)" → (60, 180)
+     * "Archive (>= 180 Days)" → (180, null)
+     * Computes age as (DateTime.Now - modifiedDate).TotalDays
+   - Keyword matching:
+     * fileName.IndexOf(keyword, OrdinalIgnoreCase) >= 0
+   - Size matching:
+     * For ranges: fileSize >= min && fileSize < max
+     * For min only: fileSize >= min
+     * For max only: fileSize < max
+   - If a condition field is null in the rule, it's considered a match (true)
+
+   private List<string> ParseExtensions(string extCategory) (line 379)
+   - Regex: matches parenthesized content: @"\(([^)]+)\)"
+   - Splits by comma, trims whitespace, removes leading dots
+
+   private (int? minDays, int? maxDays) ParseAgeDays(string ageDays) (line 394)
+   - Three patterns:
+     * Range: @"(\d+)\s*–\s*(\d+)" → min, max
+     * Less than: @"<\s*(\d+)" → null, max
+     * Greater/equal: ">=\s*(\d+)" → min, null
+   - Returns named tuple
+
+   private void PopulatePreviewTree() (line 421)
+   - Reads DISTINCT predicted_destination FROM imported_files
+   - Splits each path into folder hierarchy
+   - Builds TreeNode hierarchy, stores full path in Tag
+   - Auto-expands all nodes, selects the first one
+   - Calls PopulateContentsList()
+
+   private string GetRelativePreviewPath(string fullPath) (line 480)
+   - Strips baseDestinationPath prefix from full path
+
+   private void PopulateContentsList() (line 495)
+   - Called when a tree node is selected
+   - Queries imported_files WHERE predicted_destination LIKE @path%
+   - Sets appropriate image key based on extension
+   - Displays in lvFolderContents
+
+   private void UpdateStats() (line 562)
+   - Updates lblStatTotal, lblStatMatched, lblStatUnmatched
+
+   private bool UseMoveOperation() (line 815)
+   - Checks the first imported file's operation_type
+   - Returns true if operation_type == "Move"
+   - Returns false for "Copy" or any error
+
+   private string TruncatePath(string path, int maxLen) (line 834)
+   - Truncates path to maxLen characters (for DB column limits)
+
+   private static void CopyDirectoryRecursive(string sourceDir,
+       string destDir) (line 841)
+   - Creates destDir, copies all files overwriting existing
+   - Recurses into subdirectories
+
+   private string GenerateExecutionId() (line 856)
+   - Finds max numeric part of existing execution_ids (e.g., "exe5")
+   - Returns next number: "exe" + (max + 1)
+   - Fallback: uses MAX(id) from operation_history
+
+9. UI CONTROLS (defined in Designer)
+   - btnPreparePreview: Start preview generation
+   - btnExecuteOrganize: Execute the organization
+   - tvDestinationPreview: TreeView showing predicted folder structure
+   - lvFolderContents: ListView with large icons for file contents
+   - prgOrganizeProgress: Progress bar for both phases
+   - lblProgressStatus: Status text
+   - lblStatTotal / lblStatMatched / lblStatUnmatched: Statistics labels
+
+10. DATABASE TABLES USED
+    - app_settings: Reads destination_folder_path
+    - organization_rules: Reads all active rules (SELECT)
+    - imported_files: UPDATE predicted_destination, UPDATE destination_path,
+      SELECT for preview/execution, DELETE after archiving
+    - operation_history: INSERT for each file operation
+    - destination_file_data: INSERT ... SELECT from imported_files (archive)
+
+11. FULL WORKFLOW
+    ┌─────────────────────────────────────────────────────────┐
+    │ PHASE 1: PREPARE PREVIEW                                │
+    │ 1. Load base destination path                           │
+    │ 2. Load rules (ordered by id ASC)                       │
+    │ 3. For each imported file/folder:                       │
+    │    a. Test against each rule in order                   │
+    │    b. First match → predicted_destination = rule dest   │
+    │    c. No match → predicted_destination = Unorganized    │
+    │    d. Update imported_files.predicted_destination       │
+    │ 4. Build TreeView hierarchy from predicted paths        │
+    │ 5. Show stats (total, matched, unmatched)               │
+    └─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+    ┌─────────────────────────────────────────────────────────┐
+    │ PHASE 2: EXECUTE ORGANIZE                               │
+    │ 1. Confirm with user                                    │
+    │ 2. Generate execution_id                                │
+    │ 3. For each file with predicted_destination:            │
+    │    a. Create destination directories (if needed)        │
+    │    b. File.Copy() or File.Move()                        │
+    │      (or Directory.Move / CopyDirectoryRecursive for    │
+    │       excluded folders)                                 │
+    │    c. INSERT into operation_history                     │
+    │    d. UPDATE imported_files.destination_path            │
+    │ 4. INSERT ... SELECT into destination_file_data         │
+    │ 5. DELETE processed records from imported_files         │
+    └─────────────────────────────────────────────────────────┘
+
+12. RULE MATCHING DETAILS
+    - Rules are evaluated in database ID order (ASC)
+    - FIRST matching rule wins (no fallback to subsequent rules)
+    - Each condition (ext, age, keyword, size) is independent and nullable
+    - If a condition field is null, it's skipped (treated as match)
+    - All conditions must match (AND logic)
+    - Unmatched files go to baseDestinationPath\Unorganized_Items

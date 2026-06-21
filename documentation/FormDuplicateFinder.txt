@@ -1,0 +1,169 @@
+================================================================================
+  FormDuplicateFinder.cs — Duplicate Detection & Cleanup
+================================================================================
+  File:      FormDuplicateFinder.cs (642 lines)
+  Designer:  FormDuplicateFinder.Designer.cs
+  Resx:      FormDuplicateFinder.resx
+  Namespace: SmartFileOrganizer
+  Class:     FormDuplicateFinder : Form (partial)
+================================================================================
+
+1. PURPOSE
+   - Scans destination_file_data for duplicate files using 4 methods
+   - Displays duplicate sets one at a time with checkboxes
+   - Allows selective deletion or "Clean All" to remove all duplicates
+   - Deletes files from disk AND from the database
+
+2. PRIVATE INNER CLASSES
+
+   private class DupFile (line 16)
+   - Properties: Id, FileName, Extension, FileSize, DestPath, Hash
+   - Represents a single file from destination_file_data
+
+   private class DupSet (line 26)
+   - Properties: Files (List<DupFile>), MatchKey (string), WastedBytes (long)
+   - Represents a group of identical files (duplicates)
+
+3. FIELDS & PROPERTIES
+   - private List<DupSet> duplicateSets = new List<DupSet>()
+     In-memory collection of all duplicate sets found
+   - private int currentSetIndex = 0
+     Index for navigating between duplicate sets
+   - private FlowLayoutPanel flpFileList
+     Dynamically created panel that holds checkboxes for files in current set
+
+4. CONSTRUCTOR
+   - public FormDuplicateFinder()
+   - Calls InitializeComponent() then InitFileListPanel()
+
+5. EVENTS / EVENT HANDLERS
+
+   FormDuplicateFinder_Load (line 58)
+   - Empty; scan is manual via btnScan
+
+   btnScan_Click (line 62)
+   - Disables scan/delete buttons during operation
+   - Clears previous results
+   - Reads selected method from cboMethod:
+     * "Hash (MD5)" → ScanByHash()
+     * "Name + Size" → ScanByGrouping("name_size")
+     * "Name Only" → ScanByGrouping("name")
+     * "Size Only" → ScanByGrouping("size")
+   - Calls UpdateSummary() and ShowSet(0) if duplicates found
+   - Enables navigation buttons appropriately
+
+   btnPrev_Click (line 391)
+   - Decrements currentSetIndex, calls ShowSet()
+
+   btnNext_Click (line 400)
+   - Increments currentSetIndex, calls ShowSet()
+
+   btnDeleteSelected_Click (line 409)
+   - Collects all checked CheckBox controls from flpFileList
+   - Confirms deletion with file count and total size
+   - For each selected file:
+     1. File.Delete(file.DestPath) from disk
+     2. DELETE FROM destination_file_data WHERE id = @id
+   - Calls RemoveDeletedFromSets() to rebuild data
+   - Updates UI accordingly
+
+   btnCleanAll_Click (line 529)
+   - Collects all duplicate files (skipping first/original in each set)
+   - Same deletion logic as btnDeleteSelected but bulk
+   - Confirms: "Delete all N duplicate file(s) across M set(s)?"
+
+6. KEY METHODS
+
+   private void InitFileListPanel() (line 43)
+   - Creates a FlowLayoutPanel inside panelRightCard
+   - FlowDirection TopDown, AutoScroll=true
+   - Anchored to all four sides
+
+   private void ScanByGrouping(string groupType) (line 113)
+   - Reads all records from destination_file_data WHERE destination_path
+     IS NOT NULL, sorted by file_name
+   - Skips files that no longer exist on disk (File.Exists check)
+   - Groups files in memory:
+     * "name_size": key = fileName.ToLower() + "|" + fileSize
+     * "name": key = fileName.ToLower()
+     * "size": key = fileSize.ToString()
+   - Any group with count > 1 becomes a DupSet
+   - Shows progress in progress bar
+
+   private void ScanByHash() (line 183)
+   - Reads all records including file_hash column
+   - Skips missing files
+   - For each file, uses existing hash or computes new MD5 via ComputeMD5()
+   - New hashes are saved back to DB (UPDATE destination_file_data SET file_hash)
+   - Groups by hash; groups with count > 1 become DupSets
+   - MatchKey = "MD5: " + first 8 chars of hash + "..."
+
+   private string ComputeMD5(string filePath) (line 266)
+   - Uses System.Security.Cryptography.MD5
+   - Opens file with File.OpenRead, computes hash
+   - Returns lowercase hex string via StringBuilder
+   - Returns null on exception
+
+   private void UpdateSummary() (line 286)
+   - Computes: totalFiles, totalDupFiles (files beyond first per set),
+     wastedSpace (sum of duplicate file sizes)
+   - Reads total scanned from DB (COUNT of destination_file_data)
+   - Updates: lblTotalFiles, lblDupSets, lblTotalDupFiles, lblWastedSpace
+   - Calls SaveDuplicateStatsToDb() to persist to app_settings
+
+   private void SaveDuplicateStatsToDb(int, int, long) (line 318)
+   - Saves last_dup_sets_count, last_dup_files_count, last_dup_wasted_bytes
+     to app_settings using INSERT ON DUPLICATE KEY UPDATE
+
+   private void ShowSet(int index) (line 352)
+   - Clears flpFileList, creates a CheckBox for each file in the set
+   - First file labeled "[Original]", rest labeled "[Duplicate]"
+   - All duplicates are pre-checked (Checked = true for i > 0)
+   - Each CheckBox.Tag = DupFile object
+   - Updates navigation button states
+
+   private void RemoveDeletedFromSets() (line 509)
+   - Rebuilds duplicateSets list after deletion
+   - Filters out files where !File.Exists(f.DestPath)
+   - If a set has <= 1 remaining files, it's removed entirely
+   - Recalculates WastedBytes for each retained set
+
+   private string FormatSize(long bytes) (line 634)
+   - B, KB, MB, GB formatting
+
+7. SCAN METHODOLOGY COMPARISON
+   ┌──────────────┬────────────────────────────────────────────┐
+   │ Method       │ Matching Logic                             │
+   ├──────────────┼────────────────────────────────────────────┤
+   │ Hash (MD5)   │ Exact binary content match (most accurate) │
+   │ Name + Size  │ Same filename AND same size                │
+   │ Name Only    │ Same filename (case-insensitive)           │
+   │ Size Only    │ Same file size in bytes                    │
+   └──────────────┴────────────────────────────────────────────┘
+
+8. UI CONTROLS (defined in Designer + dynamic)
+   - cboMethod: Dropdown to select scan method
+   - btnScan: Start scan
+   - btnPrev / btnNext: Navigate duplicate sets
+   - btnDeleteSelected: Delete checked files
+   - btnCleanAll: Delete all duplicates across all sets
+   - lblSetNav: Shows "Set N of M"
+   - lblStatus: Status messages
+   - lblTotalFiles, lblDupSets, lblTotalDupFiles, lblWastedSpace: Summary
+   - prgScanProgress: Progress bar
+   - panelRightCard: Container for dynamically created flpFileList
+   - flpFileList: Dynamically created FlowLayoutPanel with CheckBox controls
+
+9. DATABASE TABLES USED
+   - destination_file_data: SELECT with destination_path filter, DELETE by id,
+     UPDATE file_hash
+   - app_settings: INSERT/UPDATE duplicate stats (last_dup_sets_count,
+     last_dup_files_count, last_dup_wasted_bytes)
+
+10. DELETION FLOW
+    User checks files -> clicks Delete Selected (or Clean All) ->
+    confirmation dialog (shows count + size) ->
+    for each file: File.Delete(destPath) from disk ->
+    DELETE FROM destination_file_data WHERE id = @id ->
+    RemoveDeletedFromSets() rebuilds in-memory data ->
+    UpdateSummary() recalculates stats -> UI updated or "No duplicates" shown

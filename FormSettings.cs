@@ -33,7 +33,6 @@ namespace SmartFileOrganizer
             {
                 conn.Open();
 
-                // Check if old schema exists
                 string checkOld = "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_NAME = 'app_settings' AND COLUMN_NAME = 'destination_folder_path' AND TABLE_SCHEMA = (SELECT DATABASE())";
                 bool isOldSchema = false;
                 using (MySqlCommand cmd = new MySqlCommand(checkOld, conn))

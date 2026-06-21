@@ -13,8 +13,6 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
         private void InitializeComponent()
         {
             this.panelCard = new System.Windows.Forms.Panel();
@@ -40,7 +38,7 @@
             // 
             // panelCard
             // 
-            this.panelCard.BackColor = System.Drawing.Color.FromArgb(230, 230, 230);
+            this.panelCard.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
             this.panelCard.Controls.Add(this.destinationText);
             this.panelCard.Controls.Add(this.importText);
             this.panelCard.Controls.Add(this.lblDestination);
@@ -56,10 +54,10 @@
             // destinationText
             // 
             this.destinationText.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Italic);
-            this.destinationText.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
+            this.destinationText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
             this.destinationText.Location = new System.Drawing.Point(88, 37);
             this.destinationText.Name = "destinationText";
-            this.destinationText.Size = new System.Drawing.Size(432, 24);
+            this.destinationText.Size = new System.Drawing.Size(545, 24);
             this.destinationText.TabIndex = 10;
             this.destinationText.Text = "Destination folder location appears here!";
             this.destinationText.TextChanged += new System.EventHandler(this.destinationText_TextChanged);
@@ -67,10 +65,10 @@
             // importText
             // 
             this.importText.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Italic);
-            this.importText.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
+            this.importText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
             this.importText.Location = new System.Drawing.Point(88, 96);
             this.importText.Name = "importText";
-            this.importText.Size = new System.Drawing.Size(432, 24);
+            this.importText.Size = new System.Drawing.Size(545, 24);
             this.importText.TabIndex = 9;
             this.importText.Text = "Imported folder location appears here!";
             this.importText.TextChanged += new System.EventHandler(this.importText_TextChanged);
@@ -99,7 +97,7 @@
             // 
             this.btnImport.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.btnImport.Font = new System.Drawing.Font("Malgun Gothic", 10F);
-            this.btnImport.Location = new System.Drawing.Point(653, 84);
+            this.btnImport.Location = new System.Drawing.Point(653, 86);
             this.btnImport.MaximumSize = new System.Drawing.Size(180, 40);
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(106, 40);
@@ -112,7 +110,7 @@
             // 
             this.btnDestination.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.btnDestination.Font = new System.Drawing.Font("Malgun Gothic", 10F);
-            this.btnDestination.Location = new System.Drawing.Point(653, 19);
+            this.btnDestination.Location = new System.Drawing.Point(653, 27);
             this.btnDestination.MaximumSize = new System.Drawing.Size(180, 40);
             this.btnDestination.Name = "btnDestination";
             this.btnDestination.Size = new System.Drawing.Size(106, 40);
@@ -167,7 +165,7 @@
             // 
             // panelImportArea
             // 
-            this.panelImportArea.BackColor = System.Drawing.Color.FromArgb(230, 230, 230);
+            this.panelImportArea.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
             this.panelImportArea.Controls.Add(this.lblOperationType);
             this.panelImportArea.Controls.Add(this.rbCopy);
             this.panelImportArea.Controls.Add(this.rbCut);
@@ -196,7 +194,7 @@
             this.rbCopy.Font = new System.Drawing.Font("Malgun Gothic", 10F);
             this.rbCopy.Location = new System.Drawing.Point(210, 18);
             this.rbCopy.Name = "rbCopy";
-            this.rbCopy.Size = new System.Drawing.Size(186, 29);
+            this.rbCopy.Size = new System.Drawing.Size(186, 27);
             this.rbCopy.TabIndex = 15;
             this.rbCopy.TabStop = true;
             this.rbCopy.Text = "Copy (keep original)";
@@ -208,7 +206,7 @@
             this.rbCut.Font = new System.Drawing.Font("Malgun Gothic", 10F);
             this.rbCut.Location = new System.Drawing.Point(419, 17);
             this.rbCut.Name = "rbCut";
-            this.rbCut.Size = new System.Drawing.Size(191, 29);
+            this.rbCut.Size = new System.Drawing.Size(157, 27);
             this.rbCut.TabIndex = 16;
             this.rbCut.Text = "Cut  (move files)";
             this.rbCut.UseVisualStyleBackColor = true;
@@ -216,7 +214,7 @@
             // btnStartImport
             // 
             this.btnStartImport.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.btnStartImport.BackColor = System.Drawing.Color.FromArgb(80, 80, 80);
+            this.btnStartImport.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
             this.btnStartImport.Font = new System.Drawing.Font("Malgun Gothic", 10F, System.Drawing.FontStyle.Bold);
             this.btnStartImport.ForeColor = System.Drawing.Color.White;
             this.btnStartImport.Location = new System.Drawing.Point(616, 12);
@@ -232,7 +230,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(235, 235, 235);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
             this.ClientSize = new System.Drawing.Size(800, 600);
             this.Controls.Add(this.listViewDirectoryContent);
             this.Controls.Add(this.panelImportArea);
@@ -246,8 +244,6 @@
             this.ResumeLayout(false);
 
         }
-
-        #endregion
 
         private System.Windows.Forms.Panel panelCard;
         private System.Windows.Forms.Button btnDestination;

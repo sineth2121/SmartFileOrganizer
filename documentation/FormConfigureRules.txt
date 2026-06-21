@@ -1,0 +1,171 @@
+================================================================================
+  FormConfigureRules.cs — Rule Management
+================================================================================
+  File:      FormConfigureRules.cs (705 lines)
+  Designer:  FormConfigureRules.Designer.cs
+  Resx:      FormConfigureRules.resx
+  Namespace: SmartFileOrganizer
+  Class:     FormConfigureRules : Form (partial)
+================================================================================
+
+1. PURPOSE
+   - Manages file organization rules used by FormPreviewOrganize
+   - Supports two mutually exclusive modes:
+     * Batch-generated rules (via 5 batch processors)
+     * Custom user-defined rules (max 10)
+   - Reads/writes the organization_rules database table
+
+2. FIELDS & PROPERTIES
+   - private string baseDestinationPath = "";
+     Reads from app_settings on form load; used to auto-fill rule destinations
+     and display the fallback folder path.
+
+3. CONSTRUCTOR
+   - public FormConfigureRules()
+   - Calls InitializeComponent() then SetInitialCheckboxStates()
+
+4. EVENTS / EVENT HANDLERS
+
+   FormConfigureRules_Load (line 140)
+   - Reads baseDestinationPath from app_settings WHERE setting_key =
+     'destination_folder_path'
+   - Updates lblFallbackNotifier with the Unorganized_Items fallback path
+   - Calls LoadRulesFromDatabase() and UpdateFormState()
+
+   chkUseExt_CheckedChanged (line 242)
+   - Enables/disables cmbExtCategory based on check state
+
+   chkUseAge_CheckedChanged (line 249)
+   - Enables/disables cmbAgeGroup based on check state
+
+   chkUseKeyword_CheckedChanged (line 256)
+   - Enables/disables txtKeyword based on check state
+
+   chkUseSize_CheckedChanged (line 263)
+   - Enables/disables nudSizeMin and nudSizeMax based on check state
+
+   txtRuleName_TextChanged (line 274)
+   - Auto-populates txtRuleDestination with baseDestinationPath + rule name
+   - Clears if name is empty
+
+   btnBrowseRuleDest_Click (line 286)
+   - Shows FolderBrowserDialog, sets txtRuleDestination
+
+   btnSaveRule_Click (line 300)
+   - Validates: name required, at least one condition checked, size values set
+   - Inserts into organization_rules with rule_source = 'custom'
+   - Size values are converted from MB to bytes (* 1024 * 1024)
+   - Calls ResetFormFields(), LoadRulesFromDatabase(), UpdateFormState()
+
+   btnDeleteRule_Click (line 384)
+   - Deletes selected rule from organization_rules WHERE id = @ruleId
+   - Asks for confirmation first
+
+   btnDeleteAll_Click (line 424)
+   - Deletes ALL rules from organization_rules
+   - Asks for confirmation (warns that it re-enables batch and custom creation)
+
+   btnBatchType_Click (line 457)
+   - Generates 6 file-type rules: Documents, Images, Videos, Audio, Archives,
+     Code using InsertBatchRule()
+   - Each rule has ext_category like "Documents (.pdf,.docx,.txt,...)"
+
+   btnBatchAge_Click (line 505)
+   - Generates 3 age-based rules: "This Month (< 30 Days)",
+     "Recent (60–180 Days)", "Archive (>= 180 Days)"
+
+   btnBatchAlphabet_Click (line 547)
+   - Generates 5 alphabetical range rules: A-E, F-J, K-O, P-T, U-Z
+   - These rules have NO conditions (just name + destination)
+   - In FormPreviewOrganize, these would match any file since no conditions are set
+
+   btnBatchSize_Click (line 593)
+   - Generates 3 size-based rules: Small (<1MB), Medium (1-100MB), Large (>100MB)
+
+   btnBatchDate_Click (line 635)
+   - Generates 3 date-modified rules (identical to age rules but labeled "Date")
+   - Same conditions as btnBatchAge
+
+5. KEY METHODS
+
+   private void SetInitialCheckboxStates() (line 17)
+   - Disables all condition controls (cmbExtCategory, cmbAgeGroup, txtKeyword,
+     nudSizeMin, nudSizeMax)
+
+   private int CountRules(string whereClause) (line 26)
+   - Returns COUNT(*) from organization_rules with optional WHERE clause
+   - Used to determine batch vs custom rule counts
+
+   private void UpdateFormState() (line 48)
+   - Core state management method
+   - If total rules == 0: everything is enabled (batch + custom)
+   - If batch rules exist: batch buttons disabled, custom form locked,
+     shows "Batch rules exist. Custom rules are locked."
+   - If only custom rules exist (batch == 0):
+     * If custom >= 10: locked, shows "Maximum 10 custom rules reached"
+     * If custom < 10: enabled, shows "Custom rules mode (N/10 used)"
+   - All batch buttons (btnBatchType/Age/Alphabet/Size/Date) are disabled
+     whenever ANY rules exist
+
+   private void LoadRulesFromDatabase() (line 170)
+   - Queries organization_rules WHERE is_active = 1
+   - Displays in listViewRules with columns: ID, Name, Conditions, Destination,
+     Source
+   - Conditions column built by BuildConditionsString()
+
+   private string BuildConditionsString(MySqlDataReader reader) (line 212)
+   - Builds a human-readable conditions string from DB fields:
+     Ext: ..., Age: ..., Key: ..., Size: ...
+   - Size formatted with FormatSize()
+   - Returns empty if no conditions
+
+   private void ResetFormFields() (line 369)
+   - Clears all custom rule form fields to default state
+
+   private void InsertBatchRule(MySqlConnection conn, ...) (line 677)
+   - Inserts a single rule with rule_source = 'batch'
+   - Uses the same INSERT statement as custom rules but with fixed source
+
+   private string FormatSize(long bytes) (line 697)
+   - Human-readable byte formatting (B, KB, MB, GB)
+
+6. UI CONTROLS (defined in Designer)
+   - listViewRules: Displays all rules (ID, Name, Conditions, Target, Source)
+   - Custom rule form: txtRuleName, chkUseExt, cmbExtCategory, chkUseAge,
+     cmbAgeGroup, chkUseKeyword, txtKeyword, chkUseSize, nudSizeMin, nudSizeMax,
+     txtRuleDestination, btnBrowseRuleDest, btnSaveRule, btnDeleteRule,
+     btnDeleteAll
+   - Batch buttons: btnBatchType, btnBatchAge, btnBatchAlphabet, btnBatchSize,
+     btnBatchDate
+   - Status: lblBatchStatus, lblFallbackNotifier
+
+7. DATABASE TABLE USED
+   - organization_rules: Full CRUD
+     Columns used: id, rule_name, ext_category, age_days, keyword_match,
+     size_min, size_max, destination_subfolder, is_active, execution_id,
+     rule_source
+   - app_settings: Reads destination_folder_path for base path
+
+8. MODE STATE MACHINE
+   ┌─────────────┐   rules=0   ┌──────────────┐
+   │  No Rules   │ ──────────> │ Everything   │
+   │ (fresh)     │ <────────── │ Enabled      │
+   └─────────────┘   delete all └──────────────┘
+                        │
+                        │ user creates batch or custom
+                        v
+   ┌──────────────────────────────────┐
+   │ Rules Exist (batch or custom)    │
+   │ - Batch buttons always disabled  │
+   │ - If batch>0: custom locked      │
+   │ - If batch=0, custom<10: custom  │
+   │   form enabled                   │
+   │ - If batch=0, custom>=10: locked │
+   └──────────────────────────────────┘
+
+9. LOGIC FLOW SUMMARY
+   Load -> read base destination path -> LoadRulesFromDatabase() ->
+   UpdateFormState()
+   On save/batch/delete -> reload rules list -> update form state
+   Batch processors are mutually exclusive with all custom rules; you must
+   delete all rules to switch modes

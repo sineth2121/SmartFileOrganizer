@@ -13,8 +13,6 @@ namespace SmartFileOrganizer
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
@@ -332,8 +330,6 @@ namespace SmartFileOrganizer
             this.ResumeLayout(false);
 
         }
-
-        #endregion
 
         private System.Windows.Forms.Panel panelTopBar;
         private System.Windows.Forms.Label lblSimulationHint;

@@ -1,0 +1,151 @@
+================================================================================
+  FormSettings.cs — Application Settings
+================================================================================
+  File:      FormSettings.cs (249 lines)
+  Designer:  FormSettings.Designer.cs
+  Resx:      FormSettings.resx
+  Namespace: SmartFileOrganizer
+  Class:     FormSettings : Form (partial)
+================================================================================
+
+1. PURPOSE
+   - Comprehensive settings management for all application behavior
+   - Manages 13 settings stored as key-value pairs in the app_settings table
+   - Includes database credential management, file operation defaults,
+     exclusion lists, and startup behavior toggles
+   - Schema migration: handles upgrading from old single-column schema
+   - Connection testing and history cleanup utility buttons
+
+2. SETTING KEY CONSTANTS
+
+   Const                        | Key                          | Default
+   ─────────────────────────────┼──────────────────────────────┼────────────────────
+   KEY_DEST_PATH                | destination_folder_path      | ""
+   KEY_DEFAULT_OP               | default_operation            | "Copy (keep originals)"
+   KEY_CONFIRM_ACTIONS          | confirm_before_actions       | "true"
+   KEY_EXCLUDED_EXT             | excluded_extensions          | ".tmp,.log,.bak"
+   KEY_EXCLUDED_FOLDERS         | excluded_folder_names        | "System Volume
+                                                                  Information,$Recycle.
+                                                                  Bin,.git,.svn"
+   KEY_MAX_FILE_SIZE            | max_file_size_mb             | "100"
+   KEY_DB_SERVER                | db_server                    | "localhost"
+   KEY_DB_PORT                  | db_port                      | "3306"
+   KEY_DB_NAME                  | db_database                  | "smart_file_organizer"
+   KEY_DB_USER                  | db_username                  | "root"
+   KEY_DB_PASS                  | db_password                  | ""
+   KEY_VERIFY_FILES             | scan_verification_at_startup | "true"
+   KEY_SCAN_DUPS                | scan_duplicates_at_startup   | "false"
+
+3. CONSTRUCTOR
+   - public FormSettings()
+   - Calls InitializeComponent() then LoadSettings()
+
+4. EVENTS / EVENT HANDLERS
+
+   btnBrowse_Click (line 144)
+   - Shows FolderBrowserDialog, sets txtDestinationPath
+
+   btnSave_Click (line 153)
+   - Validates destination folder is not empty
+   - Calls EnsureSettingsTable()
+   - Calls SetSetting() for all 13 settings
+   - Shows success message
+
+   btnTestConnection_Click (line 187)
+   - Builds a MySQL connection string from the DB credential fields
+   - Tries to open a connection
+   - Shows success or failure message
+
+   btnCleanHistory_Click (line 211)
+   - Confirms with user
+   - Executes DELETE FROM operation_history
+   - Shows count of deleted records
+
+   nudMaxFileSize_ValueChanged / nudDbPort_ValueChanged / btnBrowse_Click_1
+   - Empty handlers (designer-generated stubs)
+
+5. KEY METHODS
+
+   private void EnsureSettingsTable() (line 30)
+   - Schema migration logic:
+     * Checks if old schema exists (column 'destination_folder_path' in
+       app_settings table)
+     * If old schema:
+       - Creates app_settings_new table with key-value schema
+       - Migrates destination_folder_path value
+       - Renames app_settings → app_settings_old
+       - Renames app_settings_new → app_settings
+       - Drops app_settings_old
+     * If new schema already exists:
+       - Creates table if not exists with key-value schema
+   - The old schema was a single-row table with columns:
+     destination_folder_path, created_at
+   - The new schema is: id, setting_key (UNIQUE), setting_value, updated_at
+
+   private string GetSetting(string key, string defaultValue) (line 87)
+   - SELECT setting_value FROM app_settings WHERE setting_key = @key
+   - Returns defaultValue if no result
+
+   private void SetSetting(string key, string value) (line 102)
+   - INSERT INTO app_settings (setting_key, setting_value, updated_at)
+   - ON DUPLICATE KEY UPDATE setting_value = @value, updated_at = NOW()
+
+   private void LoadSettings() (line 118)
+   - Calls EnsureSettingsTable() first
+   - Reads each setting by key and populates the corresponding control
+   - Number settings are clamped: nudMaxFileSize (0-99999),
+     nudDbPort (1-65535)
+   - Checkbox settings: chkConfirmActions, chkVerifyFiles, chkScanDups
+
+6. UI CONTROLS (defined in Designer)
+
+   Category              | Controls
+   ──────────────────────┼─────────────────────────────────────────────
+   File Operations       | txtDestinationPath, btnBrowse,
+                         | cboDefaultOperation, chkConfirmActions
+   Exclusions            | txtExcludedExtensions, txtExcludedFolders,
+                         | nudMaxFileSize
+   Database Connection   | txtDbServer, nudDbPort, txtDbName,
+                         | txtDbUser, txtDbPassword
+   Startup Behavior      | chkVerifyFiles (scan_verification_at_startup),
+                         | chkScanDups (scan_duplicates_at_startup)
+   Action Buttons        | btnSave, btnTestConnection, btnCleanHistory
+
+7. DATABASE TABLES USED
+   - app_settings: Full CRUD for all settings
+   - operation_history: DELETE for clean history
+   - information_schema.COLUMNS: Schema migration detection
+   - Direct MySQL connection test (not using app_settings table)
+
+8. SETTINGS USAGE ACROSS THE APPLICATION
+
+   Setting                    | Used By
+   ───────────────────────────┼────────────────────────────────
+   destination_folder_path    | FormFolderSelection, FormConfigureRules,
+                              | FormPreviewOrganize, FormDashboardAnalytics
+   default_operation          | (defined but not used in code-behind)
+   confirm_before_actions     | (defined but not used in code-behind)
+   excluded_extensions        | (defined but not used in code-behind)
+   excluded_folder_names      | (defined but not used in code-behind)
+   max_file_size_mb           | (defined but not used in code-behind)
+   db_server                  | (defined for connection testing)
+   db_port                    | (defined for connection testing)
+   db_database                | (defined for connection testing)
+   db_username                | (defined for connection testing)
+   db_password                | (defined for connection testing)
+   scan_verification_at_startup | FormDashboardAnalytics
+   scan_duplicates_at_startup | FormDashboardAnalytics
+
+   NOTE: Some settings (default_operation, excluded_extensions,
+   excluded_folder_names, max_file_size_mb) are stored but not actually
+   consumed by the current codebase. They appear to be pre-defined for
+   future use or may be consumed by unimplemented features.
+
+9. ARCHITECTURE NOTES
+   - Settings are persisted as key-value pairs for flexibility
+   - The schema migration ensures backward compatibility
+   - DatabaseConfig.cs uses a hardcoded connection string and is NOT
+     dynamically updated from these settings — the settings here are only
+     used for the Test Connection button
+   - The connection testing creates its own MySqlConnection rather than
+     using DatabaseConfig.GetConnection()

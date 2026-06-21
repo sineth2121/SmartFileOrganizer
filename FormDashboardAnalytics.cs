@@ -563,7 +563,6 @@ namespace SmartFileOrganizer
             }
             catch { }
 
-            // Fill in missing days
             string[] dayNames = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
             for (int i = 6; i >= 0; i--)
             {

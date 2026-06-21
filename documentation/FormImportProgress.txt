@@ -1,0 +1,95 @@
+================================================================================
+  FormImportProgress.cs — Import Progress Dialog
+================================================================================
+  File:      FormImportProgress.cs (63 lines)
+  Designer:  FormImportProgress.Designer.cs
+  Resx:      FormImportProgress.resx
+  Namespace: SmartFileOrganizer
+  Class:     FormImportProgress : Form (partial)
+================================================================================
+
+1. PURPOSE
+   - Simple modal/non-modal progress form displayed during the file import
+     process (invoked from FormFolderSelection.btnStartImport_Click)
+   - Shows a progress bar, status text, and cancel/ok buttons
+   - Smallest form in the application (63 lines)
+
+2. FIELDS & PROPERTIES
+
+   - public bool Cancelled { get; private set; }
+     Read by FormFolderSelection to check if user cancelled the import.
+     Default: false. Set to true when btnCancel is clicked (before completion).
+
+   - private bool importingComplete = false
+     Internal flag: true after SetCompleted() is called.
+     Controls button behavior:
+     * Before completion: Cancel is enabled, OK is disabled
+     * After completion: Cancel is disabled, OK is enabled
+
+3. CONSTRUCTOR
+   - public FormImportProgress()
+   - Calls InitializeComponent()
+   - Sets Cancelled = false
+
+4. PUBLIC API METHODS
+
+   public void SetStatus(string text)
+   - Sets lblStatus.Text to the given text
+   - Called by FormFolderSelection.ImportDirectory() to update status
+
+   public void SetTotal(int total)
+   - Sets progressBar.Maximum to total (minimum 1 to avoid division by zero)
+
+   public void SetProgress(int current)
+   - Sets progressBar.Value = current
+   - Calls Application.DoEvents() to force UI update during import
+
+   public void SetCompleted()
+   - Sets importingComplete = true
+   - Sets progressBar to maximum value
+   - Sets status text: "Import completed successfully."
+   - Disables btnCancel, enables btnOk
+
+5. EVENTS / EVENT HANDLERS
+
+   btnCancel_Click (line 42)
+   - If importing is not complete, sets Cancelled = true, disables cancel
+     button, sets status "Cancelling..."
+   - FormFolderSelection checks Cancelled flag in its import loop
+
+   btnOk_Click (line 52)
+   - Only closes the form if importingComplete is true
+
+   FormImportProgress_Load (line 57)
+   - Empty handler
+
+6. UI CONTROLS (defined in Designer)
+   - progressBar: Shows import progress
+   - lblStatus: Text status message
+   - btnCancel: Cancel import button
+   - btnOk: OK button (enabled only after completion)
+
+7. INTERACTION PATTERN WITH FormFolderSelection
+   ```
+   FormFolderSelection                          FormImportProgress
+   ──────────────────                          ──────────────────
+   progressForm = new FormImportProgress()
+   progressForm.Show(this)
+   total = CountFiles(...)
+   progressForm.SetTotal(total)
+   progressForm.SetStatus("Importing files...")
+   ImportDirectory(...)
+     for each file:
+       progressForm.SetProgress(processed)
+       if progressForm.Cancelled -> abort
+   progressForm.SetCompleted()                  btnOk.Enabled = true
+                                                btnCancel.Enabled = false
+   ```
+
+8. NOTES
+   - The form is shown with progressForm.Show(this) (non-modal) so the import
+     loop continues on the main thread while the progress window is visible
+   - Application.DoEvents() in SetProgress keeps the UI responsive
+   - btnOk is only for dismissing the form after completion; btnCancel sets
+     the flag for the caller to handle cleanup
+   - No database interaction directly; purely UI feedback
