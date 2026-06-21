@@ -41,10 +41,4 @@ Once you've run the SQL script in `Database/schema.sql` to set up the tables, yo
 5. Update the connection string in `DatabaseConfig.cs` if your MySQL isn't the default localhost/root/no-password setup.
 6. Hit F5.
 
-## Git workflow I've been using
 
-```
-git add -A
-git commit -m "something descriptive"
-git push
-```
