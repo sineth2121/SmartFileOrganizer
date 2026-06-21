@@ -19,6 +19,8 @@ namespace SmartFileOrganizer
             public string ExtCategory { get; set; }
             public string AgeDays { get; set; }
             public string KeywordMatch { get; set; }
+            public long? SizeMin { get; set; }
+            public long? SizeMax { get; set; }
             public string DestinationSubfolder { get; set; }
         }
 
@@ -51,6 +53,14 @@ namespace SmartFileOrganizer
                 Color.FromArgb(175, 130, 155), "V", Color.White, imgList.ImageSize.Width));
             imgList.Images.Add("GenericFile", CreatePlaceholderIcon(
                 Color.FromArgb(160, 160, 160), "F", Color.White, imgList.ImageSize.Width));
+            imgList.Images.Add("Audio", CreatePlaceholderIcon(
+                Color.FromArgb(155, 120, 160), "A", Color.White, imgList.ImageSize.Width));
+            imgList.Images.Add("Archive", CreatePlaceholderIcon(
+                Color.FromArgb(200, 160, 100), "Z", Color.White, imgList.ImageSize.Width));
+            imgList.Images.Add("Code", CreatePlaceholderIcon(
+                Color.FromArgb(120, 170, 120), "C", Color.White, imgList.ImageSize.Width));
+            imgList.Images.Add("Executable", CreatePlaceholderIcon(
+                Color.FromArgb(180, 100, 100), "E", Color.White, imgList.ImageSize.Width));
         }
 
         private void PopulateTreeIcons()
@@ -164,7 +174,7 @@ namespace SmartFileOrganizer
                     UpdateStats();
 
                     using (MySqlCommand readCmd = new MySqlCommand(
-                        "SELECT id, file_name, file_extension, file_modified_date, file_type, file_path FROM imported_files WHERE file_type = 'File' OR (file_type = 'Folder' AND is_excluded = 1) ORDER BY id ASC", conn))
+                        "SELECT id, file_name, file_extension, file_size, file_modified_date, file_type, file_path FROM imported_files WHERE file_type = 'File' OR (file_type = 'Folder' AND is_excluded = 1) ORDER BY id ASC", conn))
                     using (MySqlDataReader reader = readCmd.ExecuteReader())
                     {
                         List<(int id, string predicted, bool matched)> updates = new List<(int, string, bool)>();
@@ -176,6 +186,7 @@ namespace SmartFileOrganizer
                             string fileName = reader["file_name"].ToString();
                             string rawExtension = reader["file_extension"] != DBNull.Value ? reader["file_extension"].ToString() : "";
                             string fileType = reader["file_type"].ToString();
+                            long fileSize = reader["file_size"] != DBNull.Value ? Convert.ToInt64(reader["file_size"]) : 0;
                             DateTime? modifiedDate = reader["file_modified_date"] != DBNull.Value
                                 ? Convert.ToDateTime(reader["file_modified_date"]) : (DateTime?)null;
 
@@ -187,7 +198,7 @@ namespace SmartFileOrganizer
 
                             foreach (Rule rule in rules)
                             {
-                                if (FileMatchesRule(fileName, extension, modifiedDate, rule))
+                                if (FileMatchesRule(fileName, extension, modifiedDate, fileSize, rule))
                                 {
                                     predictedDest = Path.Combine(rule.DestinationSubfolder, fileName);
                                     matched = true;
@@ -277,7 +288,7 @@ namespace SmartFileOrganizer
                 {
                     conn.Open();
                     using (MySqlCommand cmd = new MySqlCommand(
-                        "SELECT id, rule_name, ext_category, age_days, keyword_match, destination_subfolder " +
+                        "SELECT id, rule_name, ext_category, age_days, keyword_match, size_min, size_max, destination_subfolder " +
                         "FROM organization_rules WHERE is_active = 1 ORDER BY id ASC", conn))
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -290,6 +301,8 @@ namespace SmartFileOrganizer
                                 ExtCategory = reader["ext_category"] != DBNull.Value ? reader["ext_category"].ToString() : null,
                                 AgeDays = reader["age_days"] != DBNull.Value ? reader["age_days"].ToString() : null,
                                 KeywordMatch = reader["keyword_match"] != DBNull.Value ? reader["keyword_match"].ToString() : null,
+                                SizeMin = reader["size_min"] != DBNull.Value ? Convert.ToInt64(reader["size_min"]) : (long?)null,
+                                SizeMax = reader["size_max"] != DBNull.Value ? Convert.ToInt64(reader["size_max"]) : (long?)null,
                                 DestinationSubfolder = reader["destination_subfolder"].ToString()
                             };
                             rules.Add(rule);
@@ -305,11 +318,12 @@ namespace SmartFileOrganizer
             return rules;
         }
 
-        private bool FileMatchesRule(string fileName, string extension, DateTime? modifiedDate, Rule rule)
+        private bool FileMatchesRule(string fileName, string extension, DateTime? modifiedDate, long fileSize, Rule rule)
         {
             bool extMatch = true;
             bool ageMatch = true;
             bool keywordMatch = true;
+            bool sizeMatch = true;
 
             if (!string.IsNullOrEmpty(rule.ExtCategory))
             {
@@ -334,10 +348,12 @@ namespace SmartFileOrganizer
                     var (minDays, maxDays) = ParseAgeDays(rule.AgeDays);
                     int ageInDays = (int)(DateTime.Now - modifiedDate.Value).TotalDays;
 
-                    if (minDays.HasValue && ageInDays >= minDays.Value)
-                        ageMatch = true;
-                    if (maxDays.HasValue && ageInDays < maxDays.Value)
-                        ageMatch = true;
+                    if (minDays.HasValue && maxDays.HasValue)
+                        ageMatch = ageInDays >= minDays.Value && ageInDays < maxDays.Value;
+                    else if (minDays.HasValue)
+                        ageMatch = ageInDays >= minDays.Value;
+                    else if (maxDays.HasValue)
+                        ageMatch = ageInDays < maxDays.Value;
                 }
             }
 
@@ -346,7 +362,18 @@ namespace SmartFileOrganizer
                 keywordMatch = fileName.IndexOf(rule.KeywordMatch, StringComparison.OrdinalIgnoreCase) >= 0;
             }
 
-            return extMatch && ageMatch && keywordMatch;
+            if (rule.SizeMin.HasValue || rule.SizeMax.HasValue)
+            {
+                sizeMatch = false;
+                if (rule.SizeMin.HasValue && rule.SizeMax.HasValue)
+                    sizeMatch = fileSize >= rule.SizeMin.Value && fileSize < rule.SizeMax.Value;
+                else if (rule.SizeMin.HasValue)
+                    sizeMatch = fileSize >= rule.SizeMin.Value;
+                else if (rule.SizeMax.HasValue)
+                    sizeMatch = fileSize < rule.SizeMax.Value;
+            }
+
+            return extMatch && ageMatch && keywordMatch && sizeMatch;
         }
 
         private List<string> ParseExtensions(string extCategory)
@@ -366,6 +393,14 @@ namespace SmartFileOrganizer
 
         private (int? minDays, int? maxDays) ParseAgeDays(string ageDays)
         {
+            Match rangeMatch = Regex.Match(ageDays, @"(\d+)\s*–\s*(\d+)");
+            if (rangeMatch.Success)
+            {
+                int min = int.Parse(rangeMatch.Groups[1].Value);
+                int max = int.Parse(rangeMatch.Groups[2].Value);
+                return (min, max);
+            }
+
             Match ltMatch = Regex.Match(ageDays, @"<\s*(\d+)");
             if (ltMatch.Success)
             {
@@ -494,11 +529,19 @@ namespace SmartFileOrganizer
                                 else if (!string.IsNullOrEmpty(ext))
                                 {
                                     string extLower = ext.TrimStart('.').ToLower();
-                                    if (extLower == "png" || extLower == "jpg" || extLower == "gif" || extLower == "jpeg" || extLower == "bmp")
+                                    if (IsImageExt(extLower))
                                         imageKey = "Image";
-                                    else if (extLower == "mp4" || extLower == "mkv" || extLower == "avi" || extLower == "mov")
+                                    else if (IsVideoExt(extLower))
                                         imageKey = "Video";
-                                    else if (extLower == "pdf" || extLower == "docx" || extLower == "txt" || extLower == "doc" || extLower == "xlsx")
+                                    else if (IsAudioExt(extLower))
+                                        imageKey = "Audio";
+                                    else if (IsArchiveExt(extLower))
+                                        imageKey = "Archive";
+                                    else if (IsCodeExt(extLower))
+                                        imageKey = "Code";
+                                    else if (IsExecutableExt(extLower))
+                                        imageKey = "Executable";
+                                    else if (IsDocumentExt(extLower))
                                         imageKey = "Document";
                                 }
 
@@ -521,6 +564,55 @@ namespace SmartFileOrganizer
             lblStatTotal.Text = $"📁 {totalFiles}";
             lblStatMatched.Text = $"✅ {matchedCount}";
             lblStatUnmatched.Text = $"⚠️ {unmatchedCount}";
+        }
+
+        private static bool IsImageExt(string ext)
+        {
+            return ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "gif" || ext == "bmp"
+                || ext == "tiff" || ext == "tif" || ext == "webp" || ext == "svg"
+                || ext == "ico" || ext == "heic" || ext == "raw";
+        }
+
+        private static bool IsVideoExt(string ext)
+        {
+            return ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov"
+                || ext == "wmv" || ext == "flv" || ext == "webm" || ext == "m4v"
+                || ext == "3gp" || ext == "mpeg" || ext == "mpg";
+        }
+
+        private static bool IsAudioExt(string ext)
+        {
+            return ext == "mp3" || ext == "wav" || ext == "flac" || ext == "aac"
+                || ext == "ogg" || ext == "wma" || ext == "m4a";
+        }
+
+        private static bool IsArchiveExt(string ext)
+        {
+            return ext == "zip" || ext == "rar" || ext == "7z" || ext == "tar"
+                || ext == "gz" || ext == "bz2";
+        }
+
+        private static bool IsCodeExt(string ext)
+        {
+            return ext == "cs" || ext == "py" || ext == "js" || ext == "ts"
+                || ext == "java" || ext == "cpp" || ext == "c" || ext == "h"
+                || ext == "css" || ext == "sql" || ext == "php" || ext == "rb"
+                || ext == "go" || ext == "rs" || ext == "swift" || ext == "kt"
+                || ext == "sh" || ext == "bat" || ext == "ps1";
+        }
+
+        private static bool IsExecutableExt(string ext)
+        {
+            return ext == "exe" || ext == "msi" || ext == "dll";
+        }
+
+        private static bool IsDocumentExt(string ext)
+        {
+            return ext == "pdf" || ext == "doc" || ext == "docx" || ext == "xls"
+                || ext == "xlsx" || ext == "ppt" || ext == "pptx" || ext == "odt"
+                || ext == "ods" || ext == "odp" || ext == "rtf" || ext == "csv"
+                || ext == "xml" || ext == "json" || ext == "md" || ext == "html"
+                || ext == "htm" || ext == "txt";
         }
 
         private void btnExecuteOrganize_Click(object sender, EventArgs e)

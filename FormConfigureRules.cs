@@ -19,6 +19,8 @@ namespace SmartFileOrganizer
             cmbExtCategory.Enabled = false;
             cmbAgeGroup.Enabled = false;
             txtKeyword.Enabled = false;
+            nudSizeMin.Enabled = false;
+            nudSizeMax.Enabled = false;
         }
 
         private int CountRules(string whereClause)
@@ -60,6 +62,7 @@ namespace SmartFileOrganizer
                 chkUseExt.Enabled = true;
                 chkUseAge.Enabled = true;
                 chkUseKeyword.Enabled = true;
+                chkUseSize.Enabled = true;
                 txtRuleDestination.Enabled = true;
                 btnBrowseRuleDest.Enabled = true;
                 btnSaveRule.Enabled = true;
@@ -72,6 +75,8 @@ namespace SmartFileOrganizer
             btnBatchType.Enabled = false;
             btnBatchAge.Enabled = false;
             btnBatchAlphabet.Enabled = false;
+            btnBatchSize.Enabled = false;
+            btnBatchDate.Enabled = false;
 
             if (batchRules > 0)
             {
@@ -85,6 +90,9 @@ namespace SmartFileOrganizer
                 cmbAgeGroup.Enabled = false;
                 chkUseKeyword.Enabled = false;
                 txtKeyword.Enabled = false;
+                chkUseSize.Enabled = false;
+                nudSizeMin.Enabled = false;
+                nudSizeMax.Enabled = false;
                 txtRuleDestination.Enabled = false;
                 btnBrowseRuleDest.Enabled = false;
                 btnSaveRule.Enabled = false;
@@ -103,6 +111,9 @@ namespace SmartFileOrganizer
                     cmbAgeGroup.Enabled = false;
                     chkUseKeyword.Enabled = false;
                     txtKeyword.Enabled = false;
+                    chkUseSize.Enabled = false;
+                    nudSizeMin.Enabled = false;
+                    nudSizeMax.Enabled = false;
                     txtRuleDestination.Enabled = false;
                     btnBrowseRuleDest.Enabled = false;
                     btnSaveRule.Enabled = false;
@@ -116,6 +127,7 @@ namespace SmartFileOrganizer
                     chkUseExt.Enabled = true;
                     chkUseAge.Enabled = true;
                     chkUseKeyword.Enabled = true;
+                    chkUseSize.Enabled = true;
                     txtRuleDestination.Enabled = true;
                     btnBrowseRuleDest.Enabled = true;
                     btnSaveRule.Enabled = true;
@@ -164,7 +176,7 @@ namespace SmartFileOrganizer
                 using (MySqlConnection conn = DatabaseConfig.GetConnection())
                 {
                     conn.Open();
-                    string query = "SELECT id, rule_name, ext_category, age_days, keyword_match, destination_subfolder, rule_source "
+                    string query = "SELECT id, rule_name, ext_category, age_days, keyword_match, size_min, size_max, destination_subfolder, rule_source "
                                  + "FROM organization_rules WHERE is_active = 1";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
@@ -202,6 +214,8 @@ namespace SmartFileOrganizer
             string ext = reader["ext_category"] != DBNull.Value ? reader["ext_category"].ToString() : "";
             string age = reader["age_days"] != DBNull.Value ? reader["age_days"].ToString() : "";
             string keyword = reader["keyword_match"] != DBNull.Value ? reader["keyword_match"].ToString() : "";
+            long? sizeMin = reader["size_min"] != DBNull.Value ? Convert.ToInt64(reader["size_min"]) : (long?)null;
+            long? sizeMax = reader["size_max"] != DBNull.Value ? Convert.ToInt64(reader["size_max"]) : (long?)null;
 
             string result = "";
             if (!string.IsNullOrEmpty(ext))
@@ -210,6 +224,17 @@ namespace SmartFileOrganizer
                 result += (result.Length > 0 ? ", " : "") + "Age: " + age;
             if (!string.IsNullOrEmpty(keyword))
                 result += (result.Length > 0 ? ", " : "") + "Key: " + keyword;
+            if (sizeMin.HasValue || sizeMax.HasValue)
+            {
+                string sizeStr = "Size: ";
+                if (sizeMin.HasValue && sizeMax.HasValue)
+                    sizeStr += FormatSize(sizeMin.Value) + "–" + FormatSize(sizeMax.Value);
+                else if (sizeMin.HasValue)
+                    sizeStr += ">= " + FormatSize(sizeMin.Value);
+                else
+                    sizeStr += "<= " + FormatSize(sizeMax.Value);
+                result += (result.Length > 0 ? ", " : "") + sizeStr;
+            }
 
             return result;
         }
@@ -233,6 +258,17 @@ namespace SmartFileOrganizer
             txtKeyword.Enabled = chkUseKeyword.Checked;
             if (!chkUseKeyword.Checked)
                 txtKeyword.Clear();
+        }
+
+        private void chkUseSize_CheckedChanged(object sender, EventArgs e)
+        {
+            nudSizeMin.Enabled = chkUseSize.Checked;
+            nudSizeMax.Enabled = chkUseSize.Checked;
+            if (!chkUseSize.Checked)
+            {
+                nudSizeMin.Value = 0;
+                nudSizeMax.Value = 0;
+            }
         }
 
         private void txtRuleName_TextChanged(object sender, EventArgs e)
@@ -272,10 +308,17 @@ namespace SmartFileOrganizer
                 return;
             }
 
-            if (!chkUseExt.Checked && !chkUseAge.Checked && !chkUseKeyword.Checked)
+            if (!chkUseExt.Checked && !chkUseAge.Checked && !chkUseKeyword.Checked && !chkUseSize.Checked)
             {
-                MessageBox.Show("Please select at least one condition (Extension, Age, or Keyword).",
+                MessageBox.Show("Please select at least one condition (Extension, Age, Keyword, or Size).",
                     "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (chkUseSize.Checked && nudSizeMin.Value == 0 && nudSizeMax.Value == 0)
+            {
+                MessageBox.Show("Please set a minimum or maximum file size.", "Validation Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -293,8 +336,8 @@ namespace SmartFileOrganizer
                 {
                     conn.Open();
                     string query = @"INSERT INTO organization_rules
-                        (rule_name, ext_category, age_days, keyword_match, destination_subfolder, is_active, execution_id, rule_source)
-                        VALUES (@name, @ext, @age, @keyword, @dest, 1, NULL, 'custom')";
+                        (rule_name, ext_category, age_days, keyword_match, size_min, size_max, destination_subfolder, is_active, execution_id, rule_source)
+                        VALUES (@name, @ext, @age, @keyword, @sizeMin, @sizeMax, @dest, 1, NULL, 'custom')";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
@@ -302,6 +345,8 @@ namespace SmartFileOrganizer
                         cmd.Parameters.AddWithValue("@ext", chkUseExt.Checked ? cmbExtCategory.SelectedItem.ToString() : (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@age", chkUseAge.Checked ? cmbAgeGroup.SelectedItem.ToString() : (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@keyword", chkUseKeyword.Checked ? txtKeyword.Text.Trim() : (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@sizeMin", chkUseSize.Checked ? (object)((long)nudSizeMin.Value * 1024L * 1024L) : DBNull.Value);
+                        cmd.Parameters.AddWithValue("@sizeMax", chkUseSize.Checked ? (object)((long)nudSizeMax.Value * 1024L * 1024L) : DBNull.Value);
                         cmd.Parameters.AddWithValue("@dest", destination);
                         cmd.ExecuteNonQuery();
                     }
@@ -327,9 +372,12 @@ namespace SmartFileOrganizer
             chkUseExt.Checked = false;
             chkUseAge.Checked = false;
             chkUseKeyword.Checked = false;
+            chkUseSize.Checked = false;
             cmbExtCategory.SelectedIndex = -1;
             cmbAgeGroup.SelectedIndex = -1;
             txtKeyword.Clear();
+            nudSizeMin.Value = 0;
+            nudSizeMax.Value = 0;
             txtRuleDestination.Clear();
         }
 
@@ -416,7 +464,7 @@ namespace SmartFileOrganizer
             }
 
             DialogResult confirm = MessageBox.Show(
-                "Insert standard File Type sorting rules (Documents, Images, Videos)?",
+                "Insert File Type sorting rules (Documents, Images, Videos, Audio, Archives, Code)?",
                 "Batch Processor", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (confirm != DialogResult.Yes)
@@ -428,12 +476,18 @@ namespace SmartFileOrganizer
                 {
                     conn.Open();
 
-                    InsertBatchRule(conn, "Documents", "Documents (.pdf,.docx,.txt)", null, null,
+                    InsertBatchRule(conn, "Documents", "Documents (.pdf,.docx,.txt,.doc,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.csv,.xml,.json,.md,.html)", null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "Documents"));
-                    InsertBatchRule(conn, "Images", "Images (.png,.jpg,.gif)", null, null,
+                    InsertBatchRule(conn, "Images", "Images (.png,.jpg,.jpeg,.gif,.bmp,.tiff,.tif,.webp,.svg,.ico,.heic,.raw)", null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "Images"));
-                    InsertBatchRule(conn, "Videos", "Videos (.mp4,.mkv)", null, null,
+                    InsertBatchRule(conn, "Videos", "Videos (.mp4,.mkv,.avi,.mov,.wmv,.flv,.webm,.m4v,.3gp,.mpeg,.mpg)", null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "Videos"));
+                    InsertBatchRule(conn, "Audio", "Audio (.mp3,.wav,.flac,.aac,.ogg,.wma,.m4a)", null, null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "Audio"));
+                    InsertBatchRule(conn, "Archives", "Archives (.zip,.rar,.7z,.tar,.gz,.bz2,.xz,.iso)", null, null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "Archives"));
+                    InsertBatchRule(conn, "Code", "Code/Scripts (.cs,.py,.js,.ts,.css,.yaml,.yml,.sh,.bat,.ps1,.cpp,.h,.java,.go,.rb,.php)", null, null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "Code"));
                 }
 
                 LoadRulesFromDatabase();
@@ -458,7 +512,7 @@ namespace SmartFileOrganizer
             }
 
             DialogResult confirm = MessageBox.Show(
-                "Insert standard File Age sorting rules (Recent, Archive)?",
+                "Insert File Age sorting rules (This Month, Last Quarter, This Year)?",
                 "Batch Processor", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (confirm != DialogResult.Yes)
@@ -470,10 +524,12 @@ namespace SmartFileOrganizer
                 {
                     conn.Open();
 
-                    InsertBatchRule(conn, "Recent Items", null, "New Files (< 30 Days)", null,
-                        System.IO.Path.Combine(baseDestinationPath, "Recent"));
-                    InsertBatchRule(conn, "Old Archives", null, "Archive (>= 180 Days)", null,
-                        System.IO.Path.Combine(baseDestinationPath, "Archive"));
+                    InsertBatchRule(conn, "This Month", null, "This Month (< 30 Days)", null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "This Month"));
+                    InsertBatchRule(conn, "Last Quarter", null, "Recent (60–180 Days)", null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "Last Quarter"));
+                    InsertBatchRule(conn, "This Year", null, "Archive (>= 180 Days)", null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "This Year"));
                 }
 
                 LoadRulesFromDatabase();
@@ -510,15 +566,15 @@ namespace SmartFileOrganizer
                 {
                     conn.Open();
 
-                    InsertBatchRule(conn, "A-E Range", null, null, null,
+                    InsertBatchRule(conn, "A-E Range", null, null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "A-E"));
-                    InsertBatchRule(conn, "F-J Range", null, null, null,
+                    InsertBatchRule(conn, "F-J Range", null, null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "F-J"));
-                    InsertBatchRule(conn, "K-O Range", null, null, null,
+                    InsertBatchRule(conn, "K-O Range", null, null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "K-O"));
-                    InsertBatchRule(conn, "P-T Range", null, null, null,
+                    InsertBatchRule(conn, "P-T Range", null, null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "P-T"));
-                    InsertBatchRule(conn, "U-Z Range", null, null, null,
+                    InsertBatchRule(conn, "U-Z Range", null, null, null, null, null,
                         System.IO.Path.Combine(baseDestinationPath, "U-Z"));
                 }
 
@@ -534,12 +590,96 @@ namespace SmartFileOrganizer
             }
         }
 
+        private void btnBatchSize_Click(object sender, EventArgs e)
+        {
+            if (CountRules("") > 0)
+            {
+                MessageBox.Show("Rules already exist. Delete all rules first to use batch processors.",
+                    "Locked", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            DialogResult confirm = MessageBox.Show(
+                "Insert file size sorting rules (Small <1MB, Medium 1–100MB, Large >100MB)?",
+                "Batch Processor", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (confirm != DialogResult.Yes)
+                return;
+
+            try
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+
+                    InsertBatchRule(conn, "Small Files", null, null, null, 0, 1024L * 1024L,
+                        System.IO.Path.Combine(baseDestinationPath, "Small Files"));
+                    InsertBatchRule(conn, "Medium Files", null, null, null, 1024L * 1024L, 100L * 1024L * 1024L,
+                        System.IO.Path.Combine(baseDestinationPath, "Medium Files"));
+                    InsertBatchRule(conn, "Large Files", null, null, null, 100L * 1024L * 1024L, null,
+                        System.IO.Path.Combine(baseDestinationPath, "Large Files"));
+                }
+
+                LoadRulesFromDatabase();
+                UpdateFormState();
+                MessageBox.Show("File Size batch rules created successfully!", "Success",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to create batch rules: " + ex.Message,
+                    "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnBatchDate_Click(object sender, EventArgs e)
+        {
+            if (CountRules("") > 0)
+            {
+                MessageBox.Show("Rules already exist. Delete all rules first to use batch processors.",
+                    "Locked", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            DialogResult confirm = MessageBox.Show(
+                "Insert date-modified sorting rules (This Month, Last Quarter, This Year)?",
+                "Batch Processor", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (confirm != DialogResult.Yes)
+                return;
+
+            try
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+
+                    InsertBatchRule(conn, "This Month", null, "This Month (< 30 Days)", null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "This Month"));
+                    InsertBatchRule(conn, "Last Quarter", null, "Recent (60–180 Days)", null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "Last Quarter"));
+                    InsertBatchRule(conn, "This Year", null, "Archive (>= 180 Days)", null, null, null,
+                        System.IO.Path.Combine(baseDestinationPath, "This Year"));
+                }
+
+                LoadRulesFromDatabase();
+                UpdateFormState();
+                MessageBox.Show("Date Modified batch rules created successfully!", "Success",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to create batch rules: " + ex.Message,
+                    "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void InsertBatchRule(MySqlConnection conn, string ruleName, string extCategory,
-            string ageDays, string keyword, string destination)
+            string ageDays, string keyword, long? sizeMin, long? sizeMax, string destination)
         {
             string query = @"INSERT INTO organization_rules
-                (rule_name, ext_category, age_days, keyword_match, destination_subfolder, is_active, execution_id, rule_source)
-                VALUES (@name, @ext, @age, @keyword, @dest, 1, NULL, 'batch')";
+                (rule_name, ext_category, age_days, keyword_match, size_min, size_max, destination_subfolder, is_active, execution_id, rule_source)
+                VALUES (@name, @ext, @age, @keyword, @sizeMin, @sizeMax, @dest, 1, NULL, 'batch')";
 
             using (MySqlCommand cmd = new MySqlCommand(query, conn))
             {
@@ -547,9 +687,19 @@ namespace SmartFileOrganizer
                 cmd.Parameters.AddWithValue("@ext", (object)extCategory ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@age", (object)ageDays ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@keyword", (object)keyword ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@sizeMin", (object)sizeMin ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@sizeMax", (object)sizeMax ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@dest", destination);
                 cmd.ExecuteNonQuery();
             }
+        }
+
+        private string FormatSize(long bytes)
+        {
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return (bytes / 1024.0).ToString("F0") + " KB";
+            if (bytes < 1024L * 1024 * 1024) return (bytes / (1024.0 * 1024.0)).ToString("F1") + " MB";
+            return (bytes / (1024.0 * 1024.0 * 1024.0)).ToString("F2") + " GB";
         }
     }
 }

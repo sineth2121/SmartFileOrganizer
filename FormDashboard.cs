@@ -45,7 +45,6 @@ namespace SmartFileOrganizer
         }
         private void FormDashboard_Load(object sender, EventArgs e)
         {
-            DatabaseConfig.EnsureDatabase();
             ShowDashboard();
         }
 

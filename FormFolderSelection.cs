@@ -78,8 +78,6 @@ namespace SmartFileOrganizer
 
         private void btnImport_Click(object sender, EventArgs e)
         {
-            DatabaseConfig.EnsureDatabase();
-
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
                 folderDialog.Description = "Select the source folder to Import Files.";

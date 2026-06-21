@@ -22,7 +22,13 @@ namespace SmartFileOrganizer
             this.btnBatchType = new System.Windows.Forms.Button();
             this.btnBatchAge = new System.Windows.Forms.Button();
             this.btnBatchAlphabet = new System.Windows.Forms.Button();
+            this.btnBatchSize = new System.Windows.Forms.Button();
+            this.btnBatchDate = new System.Windows.Forms.Button();
             this.lblBatchStatus = new System.Windows.Forms.Label();
+            this.chkUseSize = new System.Windows.Forms.CheckBox();
+            this.nudSizeMin = new System.Windows.Forms.NumericUpDown();
+            this.lblSizeTo = new System.Windows.Forms.Label();
+            this.nudSizeMax = new System.Windows.Forms.NumericUpDown();
             this.panelCreateRule = new System.Windows.Forms.Panel();
             this.btnSaveRule = new System.Windows.Forms.Button();
             this.btnBrowseRuleDest = new System.Windows.Forms.Button();
@@ -49,13 +55,15 @@ namespace SmartFileOrganizer
             this.lblActiveRulesTitle = new System.Windows.Forms.Label();
             this.panelInfoBanner.SuspendLayout();
             this.panelBatchProcessors.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudSizeMin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudSizeMax)).BeginInit();
             this.panelCreateRule.SuspendLayout();
             this.panelActiveRules.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelInfoBanner
             // 
-            this.panelInfoBanner.BackColor = System.Drawing.Color.FromArgb(220, 220, 220);
+            this.panelInfoBanner.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
             this.panelInfoBanner.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelInfoBanner.Controls.Add(this.lblFallbackNotifier);
             this.panelInfoBanner.Dock = System.Windows.Forms.DockStyle.Top;
@@ -88,10 +96,12 @@ namespace SmartFileOrganizer
             this.panelBatchProcessors.Controls.Add(this.btnBatchType);
             this.panelBatchProcessors.Controls.Add(this.btnBatchAge);
             this.panelBatchProcessors.Controls.Add(this.btnBatchAlphabet);
+            this.panelBatchProcessors.Controls.Add(this.btnBatchSize);
+            this.panelBatchProcessors.Controls.Add(this.btnBatchDate);
             this.panelBatchProcessors.Controls.Add(this.lblBatchStatus);
             this.panelBatchProcessors.Location = new System.Drawing.Point(12, 60);
             this.panelBatchProcessors.Name = "panelBatchProcessors";
-            this.panelBatchProcessors.Size = new System.Drawing.Size(936, 110);
+            this.panelBatchProcessors.Size = new System.Drawing.Size(936, 155);
             this.panelBatchProcessors.TabIndex = 1;
             // 
             // lblBatchTitle
@@ -143,17 +153,91 @@ namespace SmartFileOrganizer
             this.btnBatchAlphabet.UseVisualStyleBackColor = false;
             this.btnBatchAlphabet.Click += new System.EventHandler(this.btnBatchAlphabet_Click);
             // 
+            // btnBatchSize
+            // 
+            this.btnBatchSize.BackColor = System.Drawing.Color.White;
+            this.btnBatchSize.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBatchSize.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.btnBatchSize.Location = new System.Drawing.Point(16, 82);
+            this.btnBatchSize.Name = "btnBatchSize";
+            this.btnBatchSize.Size = new System.Drawing.Size(290, 40);
+            this.btnBatchSize.TabIndex = 5;
+            this.btnBatchSize.Text = "📦 Sort by File Size";
+            this.btnBatchSize.UseVisualStyleBackColor = false;
+            this.btnBatchSize.Click += new System.EventHandler(this.btnBatchSize_Click);
+            // 
+            // btnBatchDate
+            // 
+            this.btnBatchDate.BackColor = System.Drawing.Color.White;
+            this.btnBatchDate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBatchDate.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.btnBatchDate.Location = new System.Drawing.Point(322, 82);
+            this.btnBatchDate.Name = "btnBatchDate";
+            this.btnBatchDate.Size = new System.Drawing.Size(290, 40);
+            this.btnBatchDate.TabIndex = 6;
+            this.btnBatchDate.Text = "📅 Sort by Date Modified";
+            this.btnBatchDate.UseVisualStyleBackColor = false;
+            this.btnBatchDate.Click += new System.EventHandler(this.btnBatchDate_Click);
+            // 
             // lblBatchStatus
             // 
             this.lblBatchStatus.AutoSize = true;
             this.lblBatchStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic);
-            this.lblBatchStatus.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            this.lblBatchStatus.Location = new System.Drawing.Point(16, 82);
+            this.lblBatchStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
+            this.lblBatchStatus.Location = new System.Drawing.Point(16, 128);
             this.lblBatchStatus.Name = "lblBatchStatus";
             this.lblBatchStatus.Size = new System.Drawing.Size(330, 20);
             this.lblBatchStatus.TabIndex = 4;
             this.lblBatchStatus.Text = "Batch rules created. Execute via Preview/Organize.";
             this.lblBatchStatus.Visible = false;
+            // 
+            // chkUseSize
+            // 
+            this.chkUseSize.AutoSize = true;
+            this.chkUseSize.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.chkUseSize.Location = new System.Drawing.Point(19, 220);
+            this.chkUseSize.Name = "chkUseSize";
+            this.chkUseSize.Size = new System.Drawing.Size(128, 25);
+            this.chkUseSize.TabIndex = 13;
+            this.chkUseSize.Text = "File Size (MB):";
+            this.chkUseSize.UseVisualStyleBackColor = true;
+            this.chkUseSize.CheckedChanged += new System.EventHandler(this.chkUseSize_CheckedChanged);
+            // 
+            // nudSizeMin
+            // 
+            this.nudSizeMin.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.nudSizeMin.Location = new System.Drawing.Point(177, 219);
+            this.nudSizeMin.Maximum = new decimal(new int[] {
+            999999,
+            0,
+            0,
+            0});
+            this.nudSizeMin.Name = "nudSizeMin";
+            this.nudSizeMin.Size = new System.Drawing.Size(65, 27);
+            this.nudSizeMin.TabIndex = 14;
+            // 
+            // lblSizeTo
+            // 
+            this.lblSizeTo.AutoSize = true;
+            this.lblSizeTo.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblSizeTo.Location = new System.Drawing.Point(246, 220);
+            this.lblSizeTo.Name = "lblSizeTo";
+            this.lblSizeTo.Size = new System.Drawing.Size(24, 21);
+            this.lblSizeTo.TabIndex = 15;
+            this.lblSizeTo.Text = "to";
+            // 
+            // nudSizeMax
+            // 
+            this.nudSizeMax.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.nudSizeMax.Location = new System.Drawing.Point(278, 219);
+            this.nudSizeMax.Maximum = new decimal(new int[] {
+            999999,
+            0,
+            0,
+            0});
+            this.nudSizeMax.Name = "nudSizeMax";
+            this.nudSizeMax.Size = new System.Drawing.Size(65, 27);
+            this.nudSizeMax.TabIndex = 16;
             // 
             // panelCreateRule
             // 
@@ -165,6 +249,10 @@ namespace SmartFileOrganizer
             this.panelCreateRule.Controls.Add(this.btnBrowseRuleDest);
             this.panelCreateRule.Controls.Add(this.txtRuleDestination);
             this.panelCreateRule.Controls.Add(this.lblDest);
+            this.panelCreateRule.Controls.Add(this.nudSizeMax);
+            this.panelCreateRule.Controls.Add(this.lblSizeTo);
+            this.panelCreateRule.Controls.Add(this.nudSizeMin);
+            this.panelCreateRule.Controls.Add(this.chkUseSize);
             this.panelCreateRule.Controls.Add(this.txtKeyword);
             this.panelCreateRule.Controls.Add(this.chkUseKeyword);
             this.panelCreateRule.Controls.Add(this.cmbAgeGroup);
@@ -174,21 +262,21 @@ namespace SmartFileOrganizer
             this.panelCreateRule.Controls.Add(this.txtRuleName);
             this.panelCreateRule.Controls.Add(this.lblRuleName);
             this.panelCreateRule.Controls.Add(this.lblCreateRuleTitle);
-            this.panelCreateRule.Location = new System.Drawing.Point(12, 180);
+            this.panelCreateRule.Location = new System.Drawing.Point(12, 221);
             this.panelCreateRule.Name = "panelCreateRule";
-            this.panelCreateRule.Size = new System.Drawing.Size(418, 348);
+            this.panelCreateRule.Size = new System.Drawing.Size(418, 454);
             this.panelCreateRule.TabIndex = 2;
             // 
             // btnSaveRule
             // 
-            this.btnSaveRule.BackColor = System.Drawing.Color.FromArgb(80, 80, 80);
+            this.btnSaveRule.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
             this.btnSaveRule.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveRule.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnSaveRule.Location = new System.Drawing.Point(19, 286);
+            this.btnSaveRule.ForeColor = System.Drawing.Color.White;
+            this.btnSaveRule.Location = new System.Drawing.Point(19, 321);
             this.btnSaveRule.Name = "btnSaveRule";
             this.btnSaveRule.Size = new System.Drawing.Size(345, 39);
             this.btnSaveRule.TabIndex = 12;
-            this.btnSaveRule.ForeColor = System.Drawing.Color.White;
             this.btnSaveRule.Text = "Save Rule";
             this.btnSaveRule.UseVisualStyleBackColor = false;
             this.btnSaveRule.Click += new System.EventHandler(this.btnSaveRule_Click);
@@ -198,7 +286,7 @@ namespace SmartFileOrganizer
             this.btnBrowseRuleDest.BackColor = System.Drawing.Color.White;
             this.btnBrowseRuleDest.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBrowseRuleDest.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnBrowseRuleDest.Location = new System.Drawing.Point(268, 241);
+            this.btnBrowseRuleDest.Location = new System.Drawing.Point(268, 276);
             this.btnBrowseRuleDest.Name = "btnBrowseRuleDest";
             this.btnBrowseRuleDest.Size = new System.Drawing.Size(96, 30);
             this.btnBrowseRuleDest.TabIndex = 11;
@@ -210,7 +298,7 @@ namespace SmartFileOrganizer
             // 
             this.txtRuleDestination.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtRuleDestination.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.txtRuleDestination.Location = new System.Drawing.Point(19, 244);
+            this.txtRuleDestination.Location = new System.Drawing.Point(19, 279);
             this.txtRuleDestination.Name = "txtRuleDestination";
             this.txtRuleDestination.ReadOnly = true;
             this.txtRuleDestination.Size = new System.Drawing.Size(243, 27);
@@ -220,7 +308,7 @@ namespace SmartFileOrganizer
             // 
             this.lblDest.AutoSize = true;
             this.lblDest.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.lblDest.Location = new System.Drawing.Point(15, 220);
+            this.lblDest.Location = new System.Drawing.Point(15, 255);
             this.lblDest.Name = "lblDest";
             this.lblDest.Size = new System.Drawing.Size(210, 21);
             this.lblDest.TabIndex = 9;
@@ -252,8 +340,11 @@ namespace SmartFileOrganizer
             this.cmbAgeGroup.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbAgeGroup.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cmbAgeGroup.Items.AddRange(new object[] {
-            "New Files (< 30 Days)",
-            "Old Files (>= 30 Days)",
+            "Today (< 1 Day)",
+            "This Week (< 7 Days)",
+            "This Month (< 30 Days)",
+            "Last Month (30–60 Days)",
+            "Recent (60–180 Days)",
             "Archive (>= 180 Days)"});
             this.cmbAgeGroup.Location = new System.Drawing.Point(177, 146);
             this.cmbAgeGroup.Name = "cmbAgeGroup";
@@ -277,10 +368,16 @@ namespace SmartFileOrganizer
             this.cmbExtCategory.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbExtCategory.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cmbExtCategory.Items.AddRange(new object[] {
-            "Documents (.pdf,.docx,.txt)",
-            "Images (.png,.jpg,.gif)",
-            "Videos (.mp4,.mkv)",
-            "Audio (.mp3,.wav)"});
+            "Documents (.pdf,.docx,.txt,.doc,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.csv,.x" +
+                "ml,.json,.md,.html)",
+            "Images (.png,.jpg,.jpeg,.gif,.bmp,.tiff,.tif,.webp,.svg,.ico,.heic,.raw)",
+            "Videos (.mp4,.mkv,.avi,.mov,.wmv,.flv,.webm,.m4v,.3gp,.mpeg,.mpg)",
+            "Audio (.mp3,.wav,.flac,.aac,.ogg,.wma,.m4a)",
+            "Archives (.zip,.rar,.7z,.tar,.gz,.bz2,.xz,.iso)",
+            "Code/Scripts (.cs,.py,.js,.ts,.css,.yaml,.yml,.sh,.bat,.ps1,.cpp,.h,.java,.go,.rb" +
+                ",.php)",
+            "Fonts (.ttf,.otf,.woff,.woff2,.eot)",
+            "Executables (.exe,.msi,.dll)"});
             this.cmbExtCategory.Location = new System.Drawing.Point(177, 111);
             this.cmbExtCategory.Name = "cmbExtCategory";
             this.cmbExtCategory.Size = new System.Drawing.Size(187, 28);
@@ -339,9 +436,9 @@ namespace SmartFileOrganizer
             this.panelActiveRules.Controls.Add(this.btnDeleteRule);
             this.panelActiveRules.Controls.Add(this.listViewRules);
             this.panelActiveRules.Controls.Add(this.lblActiveRulesTitle);
-            this.panelActiveRules.Location = new System.Drawing.Point(442, 180);
+            this.panelActiveRules.Location = new System.Drawing.Point(436, 221);
             this.panelActiveRules.Name = "panelActiveRules";
-            this.panelActiveRules.Size = new System.Drawing.Size(506, 348);
+            this.panelActiveRules.Size = new System.Drawing.Size(512, 454);
             this.panelActiveRules.TabIndex = 3;
             // 
             // btnDeleteAll
@@ -350,7 +447,7 @@ namespace SmartFileOrganizer
             this.btnDeleteAll.BackColor = System.Drawing.Color.White;
             this.btnDeleteAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDeleteAll.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnDeleteAll.Location = new System.Drawing.Point(343, 296);
+            this.btnDeleteAll.Location = new System.Drawing.Point(343, 362);
             this.btnDeleteAll.Name = "btnDeleteAll";
             this.btnDeleteAll.Size = new System.Drawing.Size(145, 39);
             this.btnDeleteAll.TabIndex = 3;
@@ -364,7 +461,7 @@ namespace SmartFileOrganizer
             this.btnDeleteRule.BackColor = System.Drawing.Color.White;
             this.btnDeleteRule.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDeleteRule.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnDeleteRule.Location = new System.Drawing.Point(192, 296);
+            this.btnDeleteRule.Location = new System.Drawing.Point(198, 362);
             this.btnDeleteRule.Name = "btnDeleteRule";
             this.btnDeleteRule.Size = new System.Drawing.Size(145, 39);
             this.btnDeleteRule.TabIndex = 2;
@@ -391,7 +488,7 @@ namespace SmartFileOrganizer
             this.listViewRules.Location = new System.Drawing.Point(16, 48);
             this.listViewRules.MultiSelect = false;
             this.listViewRules.Name = "listViewRules";
-            this.listViewRules.Size = new System.Drawing.Size(472, 242);
+            this.listViewRules.Size = new System.Drawing.Size(478, 308);
             this.listViewRules.TabIndex = 1;
             this.listViewRules.UseCompatibleStateImageBehavior = false;
             this.listViewRules.View = System.Windows.Forms.View.Details;
@@ -436,7 +533,7 @@ namespace SmartFileOrganizer
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.ClientSize = new System.Drawing.Size(960, 540);
+            this.ClientSize = new System.Drawing.Size(960, 647);
             this.Controls.Add(this.panelActiveRules);
             this.Controls.Add(this.panelCreateRule);
             this.Controls.Add(this.panelBatchProcessors);
@@ -448,6 +545,8 @@ namespace SmartFileOrganizer
             this.panelInfoBanner.ResumeLayout(false);
             this.panelBatchProcessors.ResumeLayout(false);
             this.panelBatchProcessors.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudSizeMin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudSizeMax)).EndInit();
             this.panelCreateRule.ResumeLayout(false);
             this.panelCreateRule.PerformLayout();
             this.panelActiveRules.ResumeLayout(false);
@@ -490,5 +589,11 @@ namespace SmartFileOrganizer
         private System.Windows.Forms.Button btnDeleteRule;
         private System.Windows.Forms.Button btnDeleteAll;
         private System.Windows.Forms.Label lblBatchStatus;
+        private System.Windows.Forms.Button btnBatchSize;
+        private System.Windows.Forms.Button btnBatchDate;
+        private System.Windows.Forms.CheckBox chkUseSize;
+        private System.Windows.Forms.NumericUpDown nudSizeMin;
+        private System.Windows.Forms.Label lblSizeTo;
+        private System.Windows.Forms.NumericUpDown nudSizeMax;
     }
 }

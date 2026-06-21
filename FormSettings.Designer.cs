@@ -112,9 +112,9 @@
             this.grpDatabase.Controls.Add(this.txtDbServer);
             this.grpDatabase.Controls.Add(this.lblDbServer);
             this.grpDatabase.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.grpDatabase.Location = new System.Drawing.Point(30, 340);
+            this.grpDatabase.Location = new System.Drawing.Point(12, 340);
             this.grpDatabase.Name = "grpDatabase";
-            this.grpDatabase.Size = new System.Drawing.Size(900, 162);
+            this.grpDatabase.Size = new System.Drawing.Size(936, 162);
             this.grpDatabase.TabIndex = 6;
             this.grpDatabase.TabStop = false;
             this.grpDatabase.Text = " Database Connection ";
@@ -149,7 +149,7 @@
             this.txtDbPassword.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtDbPassword.Location = new System.Drawing.Point(383, 64);
             this.txtDbPassword.Name = "txtDbPassword";
-            this.txtDbPassword.Size = new System.Drawing.Size(180, 29);
+            this.txtDbPassword.Size = new System.Drawing.Size(216, 29);
             this.txtDbPassword.TabIndex = 9;
             this.txtDbPassword.UseSystemPasswordChar = true;
             // 
@@ -170,7 +170,7 @@
             this.txtDbUser.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtDbUser.Location = new System.Drawing.Point(100, 64);
             this.txtDbUser.Name = "txtDbUser";
-            this.txtDbUser.Size = new System.Drawing.Size(180, 29);
+            this.txtDbUser.Size = new System.Drawing.Size(216, 29);
             this.txtDbUser.TabIndex = 7;
             this.txtDbUser.Text = "root";
             // 
@@ -191,7 +191,7 @@
             this.txtDbName.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtDbName.Location = new System.Drawing.Point(549, 24);
             this.txtDbName.Name = "txtDbName";
-            this.txtDbName.Size = new System.Drawing.Size(220, 29);
+            this.txtDbName.Size = new System.Drawing.Size(256, 29);
             this.txtDbName.TabIndex = 5;
             this.txtDbName.Text = "smart_file_organizer";
             // 
@@ -246,7 +246,7 @@
             this.txtDbServer.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtDbServer.Location = new System.Drawing.Point(74, 24);
             this.txtDbServer.Name = "txtDbServer";
-            this.txtDbServer.Size = new System.Drawing.Size(220, 29);
+            this.txtDbServer.Size = new System.Drawing.Size(256, 29);
             this.txtDbServer.TabIndex = 1;
             this.txtDbServer.Text = "localhost";
             // 
@@ -273,9 +273,9 @@
             this.grpFileProcessing.Controls.Add(this.txtExcludedExtensions);
             this.grpFileProcessing.Controls.Add(this.lblExcludedExt);
             this.grpFileProcessing.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.grpFileProcessing.Location = new System.Drawing.Point(30, 195);
+            this.grpFileProcessing.Location = new System.Drawing.Point(12, 195);
             this.grpFileProcessing.Name = "grpFileProcessing";
-            this.grpFileProcessing.Size = new System.Drawing.Size(900, 135);
+            this.grpFileProcessing.Size = new System.Drawing.Size(935, 135);
             this.grpFileProcessing.TabIndex = 5;
             this.grpFileProcessing.TabStop = false;
             this.grpFileProcessing.Text = " File Processing ";
@@ -327,7 +327,7 @@
             this.txtExcludedFolders.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtExcludedFolders.Location = new System.Drawing.Point(664, 50);
             this.txtExcludedFolders.Name = "txtExcludedFolders";
-            this.txtExcludedFolders.Size = new System.Drawing.Size(220, 29);
+            this.txtExcludedFolders.Size = new System.Drawing.Size(255, 29);
             this.txtExcludedFolders.TabIndex = 3;
             this.txtExcludedFolders.Text = "System Volume Information,$Recycle.Bin,.git,.svn";
             // 
@@ -348,7 +348,7 @@
             this.txtExcludedExtensions.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtExcludedExtensions.Location = new System.Drawing.Point(18, 50);
             this.txtExcludedExtensions.Name = "txtExcludedExtensions";
-            this.txtExcludedExtensions.Size = new System.Drawing.Size(630, 29);
+            this.txtExcludedExtensions.Size = new System.Drawing.Size(665, 29);
             this.txtExcludedExtensions.TabIndex = 1;
             this.txtExcludedExtensions.Text = ".tmp,.log,.bak";
             // 
@@ -376,9 +376,9 @@
             this.grpGeneral.Controls.Add(this.txtDestinationPath);
             this.grpGeneral.Controls.Add(this.lblDestLabel);
             this.grpGeneral.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
-            this.grpGeneral.Location = new System.Drawing.Point(30, 20);
+            this.grpGeneral.Location = new System.Drawing.Point(12, 23);
             this.grpGeneral.Name = "grpGeneral";
-            this.grpGeneral.Size = new System.Drawing.Size(900, 165);
+            this.grpGeneral.Size = new System.Drawing.Size(935, 162);
             this.grpGeneral.TabIndex = 4;
             this.grpGeneral.TabStop = false;
             this.grpGeneral.Text = " General ";
@@ -442,7 +442,7 @@
             // 
             this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnBrowse.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnBrowse.Location = new System.Drawing.Point(704, 48);
+            this.btnBrowse.Location = new System.Drawing.Point(739, 48);
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(100, 32);
             this.btnBrowse.TabIndex = 2;
@@ -456,7 +456,7 @@
             this.txtDestinationPath.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtDestinationPath.Location = new System.Drawing.Point(18, 50);
             this.txtDestinationPath.Name = "txtDestinationPath";
-            this.txtDestinationPath.Size = new System.Drawing.Size(680, 29);
+            this.txtDestinationPath.Size = new System.Drawing.Size(715, 29);
             this.txtDestinationPath.TabIndex = 1;
             // 
             // lblDestLabel
