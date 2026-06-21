@@ -53,7 +53,7 @@ namespace SmartFileOrganizer
             this.btnBack.FlatAppearance.BorderSize = 0;
             this.btnBack.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBack.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
-            this.btnBack.ForeColor = System.Drawing.Color.FromArgb(60, 60, 60);
+            this.btnBack.ForeColor = System.Drawing.Color.FromArgb(50, 50, 50);
             this.btnBack.Location = new System.Drawing.Point(8, 6);
             this.btnBack.Name = "btnBack";
             this.btnBack.Size = new System.Drawing.Size(90, 30);
@@ -66,7 +66,7 @@ namespace SmartFileOrganizer
             // lblTitle
             this.lblTitle.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            this.lblTitle.ForeColor = System.Drawing.Color.FromArgb(30, 30, 30);
             this.lblTitle.Location = new System.Drawing.Point(0, 0);
             this.lblTitle.Name = "lblTitle";
             this.lblTitle.Padding = new System.Windows.Forms.Padding(14, 0, 0, 0);
@@ -76,7 +76,7 @@ namespace SmartFileOrganizer
             this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 
             // panelMain
-            this.panelMain.BackColor = System.Drawing.Color.FromArgb(240, 244, 248);
+            this.panelMain.BackColor = System.Drawing.Color.FromArgb(235, 235, 235);
             this.panelMain.Controls.Add(this.panelDetailView);
             this.panelMain.Controls.Add(this.panelListView);
             this.panelMain.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -101,7 +101,7 @@ namespace SmartFileOrganizer
 
             // lblSelectedInfo
             this.lblSelectedInfo.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
-            this.lblSelectedInfo.ForeColor = System.Drawing.Color.DimGray;
+            this.lblSelectedInfo.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
             this.lblSelectedInfo.Location = new System.Drawing.Point(10, 8);
             this.lblSelectedInfo.Name = "lblSelectedInfo";
             this.lblSelectedInfo.Size = new System.Drawing.Size(910, 24);
@@ -164,7 +164,7 @@ namespace SmartFileOrganizer
             this.lvExecutions.Click += new System.EventHandler(this.lvExecutions_Click);
 
             // panelFooterStrip
-            this.panelFooterStrip.BackColor = System.Drawing.Color.FromArgb(230, 243, 254);
+            this.panelFooterStrip.BackColor = System.Drawing.Color.FromArgb(230, 230, 230);
             this.panelFooterStrip.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelFooterStrip.Controls.Add(this.lblUndoStatus);
             this.panelFooterStrip.Controls.Add(this.btnClearHistory);
@@ -178,11 +178,12 @@ namespace SmartFileOrganizer
             this.panelFooterStrip.TabIndex = 2;
 
             // btnClearHistory
-            this.btnClearHistory.BackColor = System.Drawing.Color.FromArgb(255, 200, 200);
+            this.btnClearHistory.BackColor = System.Drawing.Color.FromArgb(140, 140, 140);
             this.btnClearHistory.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnClearHistory.FlatAppearance.BorderSize = 0;
             this.btnClearHistory.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnClearHistory.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnClearHistory.ForeColor = System.Drawing.Color.White;
             this.btnClearHistory.Location = new System.Drawing.Point(10, 10);
             this.btnClearHistory.Name = "btnClearHistory";
             this.btnClearHistory.Size = new System.Drawing.Size(150, 38);
@@ -192,11 +193,12 @@ namespace SmartFileOrganizer
             this.btnClearHistory.Click += new System.EventHandler(this.btnClearHistory_Click);
 
             // btnUndo
-            this.btnUndo.BackColor = System.Drawing.Color.FromArgb(174, 224, 232);
+            this.btnUndo.BackColor = System.Drawing.Color.FromArgb(80, 80, 80);
             this.btnUndo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnUndo.FlatAppearance.BorderSize = 0;
             this.btnUndo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnUndo.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnUndo.ForeColor = System.Drawing.Color.White;
             this.btnUndo.Location = new System.Drawing.Point(175, 10);
             this.btnUndo.Name = "btnUndo";
             this.btnUndo.Size = new System.Drawing.Size(150, 38);
@@ -206,6 +208,7 @@ namespace SmartFileOrganizer
             this.btnUndo.Click += new System.EventHandler(this.btnUndo_Click);
 
             // prgUndoProgress
+            this.prgUndoProgress.ForeColor = System.Drawing.Color.FromArgb(110, 110, 110);
             this.prgUndoProgress.Location = new System.Drawing.Point(340, 10);
             this.prgUndoProgress.Name = "prgUndoProgress";
             this.prgUndoProgress.Size = new System.Drawing.Size(400, 20);
@@ -215,7 +218,7 @@ namespace SmartFileOrganizer
             // lblUndoStatus
             this.lblUndoStatus.AutoSize = true;
             this.lblUndoStatus.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.lblUndoStatus.ForeColor = System.Drawing.Color.DimGray;
+            this.lblUndoStatus.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
             this.lblUndoStatus.Location = new System.Drawing.Point(340, 35);
             this.lblUndoStatus.Name = "lblUndoStatus";
             this.lblUndoStatus.Size = new System.Drawing.Size(86, 20);
@@ -230,7 +233,7 @@ namespace SmartFileOrganizer
             // FormOperationHistory
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(240, 244, 248);
+            this.BackColor = System.Drawing.Color.FromArgb(235, 235, 235);
             this.ClientSize = new System.Drawing.Size(960, 593);
             this.Controls.Add(this.panelMain);
             this.Controls.Add(this.panelFooterStrip);

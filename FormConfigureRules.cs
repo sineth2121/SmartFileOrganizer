@@ -132,7 +132,7 @@ namespace SmartFileOrganizer
                 using (MySqlConnection conn = DatabaseConfig.GetConnection())
                 {
                     conn.Open();
-                    string query = "SELECT destination_folder_path FROM app_settings ORDER BY id DESC LIMIT 1";
+                    string query = "SELECT setting_value FROM app_settings WHERE setting_key = 'destination_folder_path' LIMIT 1";
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         object result = cmd.ExecuteScalar();

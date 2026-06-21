@@ -22,18 +22,15 @@ namespace SmartFileOrganizer
             {
                 using (MySqlConnection conn = DatabaseConfig.GetConnection())
                 {
-                    string query = "SELECT destination_folder_path FROM app_settings ORDER BY id DESC LIMIT 1";
+                    string query = "SELECT setting_value FROM app_settings WHERE setting_key = 'destination_folder_path' LIMIT 1";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         conn.Open();
-
-                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        object result = cmd.ExecuteScalar();
+                        if (result != null)
                         {
-                            if (reader.Read())
-                            {
-                                destinationText.Text = reader["destination_folder_path"].ToString();
-                            }
+                            destinationText.Text = result.ToString();
                         }
                     }
                 }
@@ -54,7 +51,7 @@ namespace SmartFileOrganizer
             using (Graphics g = Graphics.FromImage(uncheckedImg))
             {
                 g.Clear(Color.Transparent);
-                using (Pen pen = new Pen(Color.DimGray, 2f))
+                using (Pen pen = new Pen(Color.FromArgb(100, 100, 100), 2f))
                 {
                     g.DrawRectangle(pen, 1, 1, 13, 13);
                 }
@@ -65,13 +62,13 @@ namespace SmartFileOrganizer
             using (Graphics g = Graphics.FromImage(checkedImg))
             {
                 g.Clear(Color.Transparent);
-                using (Pen pen = new Pen(Color.DimGray, 2f))
+                using (Pen pen = new Pen(Color.FromArgb(100, 100, 100), 2f))
                 {
                     g.DrawRectangle(pen, 1, 1, 13, 13);
                 }
                 using (Font font = new Font("Segoe UI", 10f, FontStyle.Bold))
                 {
-                    g.DrawString("✓", font, Brushes.ForestGreen, 0, -1);
+                    g.DrawString("✓", font, Brushes.Black, 0, -1);
                 }
             }
             imageList.Images.Add(checkedImg);
@@ -81,94 +78,7 @@ namespace SmartFileOrganizer
 
         private void btnImport_Click(object sender, EventArgs e)
         {
-            try
-            {
-                using (MySqlConnection conn = DatabaseConfig.GetConnection())
-                {
-                    conn.Open();
-
-                    string createAppSettings = @"CREATE TABLE IF NOT EXISTS app_settings (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        destination_folder_path TEXT,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-                    string createImportedFiles = @"CREATE TABLE IF NOT EXISTS imported_files (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        file_name VARCHAR(255) NOT NULL,
-                        file_path TEXT NOT NULL,
-                        file_extension VARCHAR(50) NULL,
-                        file_size BIGINT NOT NULL DEFAULT 0,
-                        file_modified_date DATETIME NULL,
-                        file_type VARCHAR(20) NOT NULL DEFAULT 'File',
-                        is_excluded TINYINT(1) NOT NULL DEFAULT 0,
-                        operation_type VARCHAR(10) NOT NULL DEFAULT 'Copy',
-                        source_path TEXT NULL,
-                        destination_path TEXT NULL,
-                        predicted_destination TEXT NULL,
-                        imported_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-                    string createOperationHistory = @"CREATE TABLE IF NOT EXISTS operation_history (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        execution_id VARCHAR(36) NULL,
-                        operation_type VARCHAR(50) NOT NULL,
-                        file_name VARCHAR(255) NULL,
-                        source_path VARCHAR(500) NULL,
-                        destination_path VARCHAR(500) NULL,
-                        file_size BIGINT NULL,
-                        status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
-                        performed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-                    string createOrgRules = @"CREATE TABLE IF NOT EXISTS organization_rules (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        rule_name VARCHAR(255) NOT NULL,
-                        ext_category VARCHAR(255) NULL,
-                        age_days VARCHAR(50) NULL,
-                        keyword_match VARCHAR(255) NULL,
-                        destination_subfolder VARCHAR(255) NOT NULL,
-                        is_active TINYINT(1) NOT NULL DEFAULT 1,
-                        execution_id INT NULL,
-                        rule_source VARCHAR(20) NOT NULL DEFAULT 'custom',
-                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (execution_id) REFERENCES operation_history(id) ON DELETE SET NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-                    string createDestFileData = @"CREATE TABLE IF NOT EXISTS destination_file_data (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        execution_id VARCHAR(36) NULL,
-                        file_name VARCHAR(255) NOT NULL,
-                        file_extension VARCHAR(50) NULL,
-                        file_size BIGINT NOT NULL DEFAULT 0,
-                        file_modified_date DATETIME NULL,
-                        file_type VARCHAR(20) NOT NULL DEFAULT 'File',
-                        is_excluded TINYINT(1) NOT NULL DEFAULT 0,
-                        operation_type VARCHAR(10) NOT NULL DEFAULT 'Copy',
-                        source_path TEXT NULL,
-                        destination_path TEXT NULL,
-                        file_hash VARCHAR(64) NULL,
-                        imported_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-                    using (MySqlCommand cmd = new MySqlCommand(createAppSettings, conn))
-                        cmd.ExecuteNonQuery();
-                    using (MySqlCommand cmd = new MySqlCommand(createImportedFiles, conn))
-                        cmd.ExecuteNonQuery();
-                    using (MySqlCommand cmd = new MySqlCommand(createOperationHistory, conn))
-                        cmd.ExecuteNonQuery();
-                    using (MySqlCommand cmd = new MySqlCommand(createOrgRules, conn))
-                        cmd.ExecuteNonQuery();
-                    using (MySqlCommand cmd = new MySqlCommand(createDestFileData, conn))
-                        cmd.ExecuteNonQuery();
-
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("DB connection or table error: " + ex.Message, "DB Check", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            DatabaseConfig.EnsureDatabase();
 
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
@@ -247,7 +157,7 @@ namespace SmartFileOrganizer
             {
                 hit.Item.StateImageIndex = 1;
                 hit.Item.SubItems[2].Text = "EXCLUDED (Move folder whole, skip inside)";
-                hit.Item.BackColor = Color.LavenderBlush;
+                hit.Item.BackColor = Color.FromArgb(220, 220, 220);
             }
             else
             {
@@ -264,7 +174,7 @@ namespace SmartFileOrganizer
             if (!hasSubfolders)
             {
                 lblValidationStatus.Text = "Ready: No subfolders detected. Direct files will be organized.";
-                lblValidationStatus.ForeColor = Color.ForestGreen;
+                lblValidationStatus.ForeColor = Color.FromArgb(60, 60, 60);
             }
             else
             {
@@ -287,14 +197,14 @@ namespace SmartFileOrganizer
                 if (checkedCount == 0)
                 {
                     lblValidationStatus.Text = "Subfolders detected. Tick folders to exclude from deep scanning.";
-                    lblValidationStatus.ForeColor = Color.Firebrick;
+                    lblValidationStatus.ForeColor = Color.FromArgb(120, 120, 120);
                 }
                 else
                 {
                     lblValidationStatus.Text = "✓ Success: exclude rules are set (" +
                         checkedCount + " of " + totalFoldersCount +
                         " folders custom restricted).";
-                    lblValidationStatus.ForeColor = Color.ForestGreen;
+                    lblValidationStatus.ForeColor = Color.FromArgb(60, 60, 60);
                 }
             }
         }
@@ -335,7 +245,7 @@ namespace SmartFileOrganizer
                                         return;
                                     }
 
-                                    string deleteQuery = "DELETE FROM app_settings";
+                                    string deleteQuery = "DELETE FROM app_settings WHERE setting_key = 'destination_folder_path'";
                                     using (MySqlCommand deleteCmd = new MySqlCommand(deleteQuery, conn))
                                     {
                                         deleteCmd.ExecuteNonQuery();
@@ -343,7 +253,9 @@ namespace SmartFileOrganizer
                                 }
                             }
 
-                            string insertQuery = "INSERT INTO app_settings (destination_folder_path) VALUES (@path)";
+                            string insertQuery = @"INSERT INTO app_settings (setting_key, setting_value, updated_at)
+                                                    VALUES ('destination_folder_path', @path, NOW())
+                                                    ON DUPLICATE KEY UPDATE setting_value = @path, updated_at = NOW()";
                             using (MySqlCommand insertCmd = new MySqlCommand(insertQuery, conn))
                             {
                                 insertCmd.Parameters.AddWithValue("@path", newPath);
@@ -453,6 +365,7 @@ namespace SmartFileOrganizer
             }
             else
             {
+                IncrementImportCounter(totalFiles);
                 progressForm.SetCompleted();
                 btnStartImport.Enabled = true;
             }
@@ -566,6 +479,36 @@ namespace SmartFileOrganizer
                     cmd.Parameters.AddWithValue("@dest", destPath);
                     cmd.ExecuteNonQuery();
                 }
+            }
+        }
+
+        private void IncrementImportCounter(int newFiles)
+        {
+            try
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+                    string readQuery = "SELECT setting_value FROM app_settings WHERE setting_key = 'total_files_imported' LIMIT 1";
+                    int current = 0;
+                    using (MySqlCommand cmd = new MySqlCommand(readQuery, conn))
+                    {
+                        object result = cmd.ExecuteScalar();
+                        if (result != null)
+                            int.TryParse(result.ToString(), out current);
+                    }
+                    int total = current + newFiles;
+                    string upsert = @"INSERT INTO app_settings (setting_key, setting_value, updated_at) VALUES ('total_files_imported', @value, NOW())
+                                      ON DUPLICATE KEY UPDATE setting_value = @value, updated_at = NOW()";
+                    using (MySqlCommand cmd = new MySqlCommand(upsert, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@value", total.ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch
+            {
             }
         }
     }

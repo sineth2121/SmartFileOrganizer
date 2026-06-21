@@ -55,7 +55,7 @@ namespace SmartFileOrganizer
             // 
             // panelInfoBanner
             // 
-            this.panelInfoBanner.BackColor = System.Drawing.Color.LightCyan;
+            this.panelInfoBanner.BackColor = System.Drawing.Color.FromArgb(220, 220, 220);
             this.panelInfoBanner.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelInfoBanner.Controls.Add(this.lblFallbackNotifier);
             this.panelInfoBanner.Dock = System.Windows.Forms.DockStyle.Top;
@@ -147,7 +147,7 @@ namespace SmartFileOrganizer
             // 
             this.lblBatchStatus.AutoSize = true;
             this.lblBatchStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic);
-            this.lblBatchStatus.ForeColor = System.Drawing.Color.DimGray;
+            this.lblBatchStatus.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
             this.lblBatchStatus.Location = new System.Drawing.Point(16, 82);
             this.lblBatchStatus.Name = "lblBatchStatus";
             this.lblBatchStatus.Size = new System.Drawing.Size(330, 20);
@@ -181,13 +181,14 @@ namespace SmartFileOrganizer
             // 
             // btnSaveRule
             // 
-            this.btnSaveRule.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
+            this.btnSaveRule.BackColor = System.Drawing.Color.FromArgb(80, 80, 80);
             this.btnSaveRule.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveRule.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnSaveRule.Location = new System.Drawing.Point(19, 286);
             this.btnSaveRule.Name = "btnSaveRule";
             this.btnSaveRule.Size = new System.Drawing.Size(345, 39);
             this.btnSaveRule.TabIndex = 12;
+            this.btnSaveRule.ForeColor = System.Drawing.Color.White;
             this.btnSaveRule.Text = "Save Rule";
             this.btnSaveRule.UseVisualStyleBackColor = false;
             this.btnSaveRule.Click += new System.EventHandler(this.btnSaveRule_Click);
@@ -434,7 +435,7 @@ namespace SmartFileOrganizer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(244)))), ((int)(((byte)(248)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
             this.ClientSize = new System.Drawing.Size(960, 540);
             this.Controls.Add(this.panelActiveRules);
             this.Controls.Add(this.panelCreateRule);

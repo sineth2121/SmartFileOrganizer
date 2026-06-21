@@ -30,13 +30,13 @@ namespace SmartFileOrganizer
             this.lvFolderContents = new System.Windows.Forms.ListView();
             this.imageListFileIcons = new System.Windows.Forms.ImageList(this.components);
             this.panelFooterStrip = new System.Windows.Forms.Panel();
+            this.lblStatUnmatched = new System.Windows.Forms.Label();
+            this.lblStatMatched = new System.Windows.Forms.Label();
+            this.lblStatTotal = new System.Windows.Forms.Label();
             this.lblProgressStatus = new System.Windows.Forms.Label();
             this.btnPreparePreview = new System.Windows.Forms.Button();
             this.prgOrganizeProgress = new System.Windows.Forms.ProgressBar();
             this.panelStats = new System.Windows.Forms.FlowLayoutPanel();
-            this.lblStatTotal = new System.Windows.Forms.Label();
-            this.lblStatMatched = new System.Windows.Forms.Label();
-            this.lblStatUnmatched = new System.Windows.Forms.Label();
             this.btnExecuteOrganize = new System.Windows.Forms.Button();
             this.panelTopBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerLayout)).BeginInit();
@@ -63,7 +63,7 @@ namespace SmartFileOrganizer
             // 
             this.lblSimulationHint.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblSimulationHint.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Italic);
-            this.lblSimulationHint.ForeColor = System.Drawing.Color.DimGray;
+            this.lblSimulationHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
             this.lblSimulationHint.Location = new System.Drawing.Point(0, 0);
             this.lblSimulationHint.Name = "lblSimulationHint";
             this.lblSimulationHint.Padding = new System.Windows.Forms.Padding(14, 0, 0, 0);
@@ -88,7 +88,7 @@ namespace SmartFileOrganizer
             // 
             this.splitContainerLayout.Panel2.Controls.Add(this.panelRightCard);
             this.splitContainerLayout.Panel2MinSize = 400;
-            this.splitContainerLayout.Size = new System.Drawing.Size(960, 483);
+            this.splitContainerLayout.Size = new System.Drawing.Size(960, 492);
             this.splitContainerLayout.SplitterDistance = 336;
             this.splitContainerLayout.SplitterWidth = 2;
             this.splitContainerLayout.TabIndex = 1;
@@ -103,7 +103,7 @@ namespace SmartFileOrganizer
             this.panelLeftCard.Location = new System.Drawing.Point(0, 0);
             this.panelLeftCard.Name = "panelLeftCard";
             this.panelLeftCard.Padding = new System.Windows.Forms.Padding(8);
-            this.panelLeftCard.Size = new System.Drawing.Size(336, 483);
+            this.panelLeftCard.Size = new System.Drawing.Size(336, 492);
             this.panelLeftCard.TabIndex = 0;
             // 
             // lblTreeTitle
@@ -127,7 +127,7 @@ namespace SmartFileOrganizer
             this.tvDestinationPreview.Location = new System.Drawing.Point(10, 40);
             this.tvDestinationPreview.Name = "tvDestinationPreview";
             this.tvDestinationPreview.SelectedImageIndex = 0;
-            this.tvDestinationPreview.Size = new System.Drawing.Size(314, 431);
+            this.tvDestinationPreview.Size = new System.Drawing.Size(314, 440);
             this.tvDestinationPreview.TabIndex = 0;
             this.tvDestinationPreview.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvDestinationPreview_AfterSelect);
             // 
@@ -147,7 +147,7 @@ namespace SmartFileOrganizer
             this.panelRightCard.Location = new System.Drawing.Point(0, 0);
             this.panelRightCard.Name = "panelRightCard";
             this.panelRightCard.Padding = new System.Windows.Forms.Padding(8);
-            this.panelRightCard.Size = new System.Drawing.Size(622, 483);
+            this.panelRightCard.Size = new System.Drawing.Size(622, 492);
             this.panelRightCard.TabIndex = 0;
             // 
             // lblContentsTitle
@@ -171,7 +171,7 @@ namespace SmartFileOrganizer
             this.lvFolderContents.LargeImageList = this.imageListFileIcons;
             this.lvFolderContents.Location = new System.Drawing.Point(10, 40);
             this.lvFolderContents.Name = "lvFolderContents";
-            this.lvFolderContents.Size = new System.Drawing.Size(600, 431);
+            this.lvFolderContents.Size = new System.Drawing.Size(600, 440);
             this.lvFolderContents.TabIndex = 0;
             this.lvFolderContents.UseCompatibleStateImageBehavior = false;
             // 
@@ -183,7 +183,7 @@ namespace SmartFileOrganizer
             // 
             // panelFooterStrip
             // 
-            this.panelFooterStrip.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(243)))), ((int)(((byte)(254)))));
+            this.panelFooterStrip.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
             this.panelFooterStrip.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelFooterStrip.Controls.Add(this.lblStatUnmatched);
             this.panelFooterStrip.Controls.Add(this.lblStatMatched);
@@ -194,18 +194,60 @@ namespace SmartFileOrganizer
             this.panelFooterStrip.Controls.Add(this.panelStats);
             this.panelFooterStrip.Controls.Add(this.btnExecuteOrganize);
             this.panelFooterStrip.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelFooterStrip.Location = new System.Drawing.Point(0, 528);
+            this.panelFooterStrip.Location = new System.Drawing.Point(0, 537);
             this.panelFooterStrip.Name = "panelFooterStrip";
             this.panelFooterStrip.Padding = new System.Windows.Forms.Padding(10, 6, 10, 6);
-            this.panelFooterStrip.Size = new System.Drawing.Size(960, 89);
+            this.panelFooterStrip.Size = new System.Drawing.Size(960, 80);
             this.panelFooterStrip.TabIndex = 2;
+            // 
+            // lblStatUnmatched
+            // 
+            this.lblStatUnmatched.AutoSize = true;
+            this.lblStatUnmatched.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(180)))), ((int)(((byte)(180)))));
+            this.lblStatUnmatched.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblStatUnmatched.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblStatUnmatched.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
+            this.lblStatUnmatched.Location = new System.Drawing.Point(468, 42);
+            this.lblStatUnmatched.Name = "lblStatUnmatched";
+            this.lblStatUnmatched.Padding = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this.lblStatUnmatched.Size = new System.Drawing.Size(58, 28);
+            this.lblStatUnmatched.TabIndex = 2;
+            this.lblStatUnmatched.Text = "⚠️ 0";
+            // 
+            // lblStatMatched
+            // 
+            this.lblStatMatched.AutoSize = true;
+            this.lblStatMatched.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
+            this.lblStatMatched.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblStatMatched.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblStatMatched.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(80)))), ((int)(((byte)(55)))));
+            this.lblStatMatched.Location = new System.Drawing.Point(404, 42);
+            this.lblStatMatched.Name = "lblStatMatched";
+            this.lblStatMatched.Padding = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this.lblStatMatched.Size = new System.Drawing.Size(58, 28);
+            this.lblStatMatched.TabIndex = 1;
+            this.lblStatMatched.Text = "✅ 0";
+            // 
+            // lblStatTotal
+            // 
+            this.lblStatTotal.AutoSize = true;
+            this.lblStatTotal.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lblStatTotal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblStatTotal.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblStatTotal.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(90)))));
+            this.lblStatTotal.Location = new System.Drawing.Point(340, 42);
+            this.lblStatTotal.Name = "lblStatTotal";
+            this.lblStatTotal.Padding = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this.lblStatTotal.Size = new System.Drawing.Size(58, 28);
+            this.lblStatTotal.TabIndex = 0;
+            this.lblStatTotal.Text = "📁 0";
             // 
             // lblProgressStatus
             // 
             this.lblProgressStatus.AutoSize = true;
             this.lblProgressStatus.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.lblProgressStatus.ForeColor = System.Drawing.Color.DimGray;
-            this.lblProgressStatus.Location = new System.Drawing.Point(12, 59);
+            this.lblProgressStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
+            this.lblProgressStatus.Location = new System.Drawing.Point(10, 53);
             this.lblProgressStatus.Name = "lblProgressStatus";
             this.lblProgressStatus.Size = new System.Drawing.Size(231, 20);
             this.lblProgressStatus.TabIndex = 0;
@@ -214,14 +256,15 @@ namespace SmartFileOrganizer
             // 
             // btnPreparePreview
             // 
-            this.btnPreparePreview.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(174)))), ((int)(((byte)(224)))), ((int)(((byte)(232)))));
+            this.btnPreparePreview.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
             this.btnPreparePreview.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnPreparePreview.FlatAppearance.BorderSize = 0;
             this.btnPreparePreview.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnPreparePreview.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnPreparePreview.Location = new System.Drawing.Point(10, 7);
+            this.btnPreparePreview.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnPreparePreview.ForeColor = System.Drawing.Color.White;
+            this.btnPreparePreview.Location = new System.Drawing.Point(10, 8);
             this.btnPreparePreview.Name = "btnPreparePreview";
-            this.btnPreparePreview.Size = new System.Drawing.Size(230, 38);
+            this.btnPreparePreview.Size = new System.Drawing.Size(150, 38);
             this.btnPreparePreview.TabIndex = 3;
             this.btnPreparePreview.Text = "🔍 Prepare Preview";
             this.btnPreparePreview.UseVisualStyleBackColor = false;
@@ -229,9 +272,10 @@ namespace SmartFileOrganizer
             // 
             // prgOrganizeProgress
             // 
-            this.prgOrganizeProgress.Location = new System.Drawing.Point(249, 8);
+            this.prgOrganizeProgress.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(110)))), ((int)(((byte)(110)))));
+            this.prgOrganizeProgress.Location = new System.Drawing.Point(340, 8);
             this.prgOrganizeProgress.Name = "prgOrganizeProgress";
-            this.prgOrganizeProgress.Size = new System.Drawing.Size(542, 38);
+            this.prgOrganizeProgress.Size = new System.Drawing.Size(400, 20);
             this.prgOrganizeProgress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.prgOrganizeProgress.TabIndex = 1;
             // 
@@ -244,59 +288,17 @@ namespace SmartFileOrganizer
             this.panelStats.Size = new System.Drawing.Size(0, 0);
             this.panelStats.TabIndex = 4;
             // 
-            // lblStatTotal
-            // 
-            this.lblStatTotal.AutoSize = true;
-            this.lblStatTotal.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
-            this.lblStatTotal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblStatTotal.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblStatTotal.ForeColor = System.Drawing.Color.Navy;
-            this.lblStatTotal.Location = new System.Drawing.Point(249, 51);
-            this.lblStatTotal.Name = "lblStatTotal";
-            this.lblStatTotal.Padding = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this.lblStatTotal.Size = new System.Drawing.Size(58, 28);
-            this.lblStatTotal.TabIndex = 0;
-            this.lblStatTotal.Text = "📁 0";
-            // 
-            // lblStatMatched
-            // 
-            this.lblStatMatched.AutoSize = true;
-            this.lblStatMatched.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(245)))), ((int)(((byte)(220)))));
-            this.lblStatMatched.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblStatMatched.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblStatMatched.ForeColor = System.Drawing.Color.DarkGreen;
-            this.lblStatMatched.Location = new System.Drawing.Point(313, 51);
-            this.lblStatMatched.Name = "lblStatMatched";
-            this.lblStatMatched.Padding = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this.lblStatMatched.Size = new System.Drawing.Size(58, 28);
-            this.lblStatMatched.TabIndex = 1;
-            this.lblStatMatched.Text = "✅ 0";
-            // 
-            // lblStatUnmatched
-            // 
-            this.lblStatUnmatched.AutoSize = true;
-            this.lblStatUnmatched.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.lblStatUnmatched.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblStatUnmatched.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblStatUnmatched.ForeColor = System.Drawing.Color.DarkRed;
-            this.lblStatUnmatched.Location = new System.Drawing.Point(377, 51);
-            this.lblStatUnmatched.Name = "lblStatUnmatched";
-            this.lblStatUnmatched.Padding = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this.lblStatUnmatched.Size = new System.Drawing.Size(58, 28);
-            this.lblStatUnmatched.TabIndex = 2;
-            this.lblStatUnmatched.Text = "⚠️ 0";
-            // 
             // btnExecuteOrganize
             // 
-            this.btnExecuteOrganize.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.btnExecuteOrganize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(174)))), ((int)(((byte)(224)))), ((int)(((byte)(232)))));
+            this.btnExecuteOrganize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.btnExecuteOrganize.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnExecuteOrganize.FlatAppearance.BorderSize = 0;
             this.btnExecuteOrganize.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnExecuteOrganize.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
-            this.btnExecuteOrganize.Location = new System.Drawing.Point(797, 9);
+            this.btnExecuteOrganize.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnExecuteOrganize.ForeColor = System.Drawing.Color.White;
+            this.btnExecuteOrganize.Location = new System.Drawing.Point(175, 8);
             this.btnExecuteOrganize.Name = "btnExecuteOrganize";
-            this.btnExecuteOrganize.Size = new System.Drawing.Size(150, 40);
+            this.btnExecuteOrganize.Size = new System.Drawing.Size(150, 38);
             this.btnExecuteOrganize.TabIndex = 2;
             this.btnExecuteOrganize.Text = "⚡ Organize Files";
             this.btnExecuteOrganize.UseVisualStyleBackColor = false;
@@ -306,7 +308,7 @@ namespace SmartFileOrganizer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(244)))), ((int)(((byte)(248)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
             this.ClientSize = new System.Drawing.Size(960, 617);
             this.Controls.Add(this.splitContainerLayout);
             this.Controls.Add(this.panelFooterStrip);

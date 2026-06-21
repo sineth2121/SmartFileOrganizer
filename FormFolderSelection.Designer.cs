@@ -40,7 +40,7 @@
             // 
             // panelCard
             // 
-            this.panelCard.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
+            this.panelCard.BackColor = System.Drawing.Color.FromArgb(230, 230, 230);
             this.panelCard.Controls.Add(this.destinationText);
             this.panelCard.Controls.Add(this.importText);
             this.panelCard.Controls.Add(this.lblDestination);
@@ -56,7 +56,7 @@
             // destinationText
             // 
             this.destinationText.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Italic);
-            this.destinationText.ForeColor = System.Drawing.SystemColors.WindowFrame;
+            this.destinationText.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
             this.destinationText.Location = new System.Drawing.Point(88, 37);
             this.destinationText.Name = "destinationText";
             this.destinationText.Size = new System.Drawing.Size(432, 24);
@@ -67,7 +67,7 @@
             // importText
             // 
             this.importText.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Italic);
-            this.importText.ForeColor = System.Drawing.SystemColors.WindowFrame;
+            this.importText.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
             this.importText.Location = new System.Drawing.Point(88, 96);
             this.importText.Name = "importText";
             this.importText.Size = new System.Drawing.Size(432, 24);
@@ -167,7 +167,7 @@
             // 
             // panelImportArea
             // 
-            this.panelImportArea.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
+            this.panelImportArea.BackColor = System.Drawing.Color.FromArgb(230, 230, 230);
             this.panelImportArea.Controls.Add(this.lblOperationType);
             this.panelImportArea.Controls.Add(this.rbCopy);
             this.panelImportArea.Controls.Add(this.rbCut);
@@ -216,8 +216,9 @@
             // btnStartImport
             // 
             this.btnStartImport.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.btnStartImport.BackColor = System.Drawing.Color.PowderBlue;
+            this.btnStartImport.BackColor = System.Drawing.Color.FromArgb(80, 80, 80);
             this.btnStartImport.Font = new System.Drawing.Font("Malgun Gothic", 10F, System.Drawing.FontStyle.Bold);
+            this.btnStartImport.ForeColor = System.Drawing.Color.White;
             this.btnStartImport.Location = new System.Drawing.Point(616, 12);
             this.btnStartImport.MaximumSize = new System.Drawing.Size(180, 40);
             this.btnStartImport.Name = "btnStartImport";
@@ -231,7 +232,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.InactiveBorder;
+            this.BackColor = System.Drawing.Color.FromArgb(235, 235, 235);
             this.ClientSize = new System.Drawing.Size(800, 600);
             this.Controls.Add(this.listViewDirectoryContent);
             this.Controls.Add(this.panelImportArea);

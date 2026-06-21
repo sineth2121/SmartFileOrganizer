@@ -311,6 +311,42 @@ namespace SmartFileOrganizer
             lblDupSets.Text = "Duplicate sets: " + duplicateSets.Count;
             lblTotalDupFiles.Text = "Duplicate files: " + totalDupFiles;
             lblWastedSpace.Text = "Wasted space: " + FormatSize(wastedSpace);
+
+            SaveDuplicateStatsToDb(duplicateSets.Count, totalDupFiles, wastedSpace);
+        }
+
+        private void SaveDuplicateStatsToDb(int setCount, int dupFileCount, long wastedBytes)
+        {
+            try
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+                    string query = @"INSERT INTO app_settings (setting_key, setting_value, updated_at) VALUES (@key, @value, NOW())
+                                     ON DUPLICATE KEY UPDATE setting_value = @value, updated_at = NOW()";
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@key", "last_dup_sets_count");
+                        cmd.Parameters.AddWithValue("@value", setCount.ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@key", "last_dup_files_count");
+                        cmd.Parameters.AddWithValue("@value", dupFileCount.ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@key", "last_dup_wasted_bytes");
+                        cmd.Parameters.AddWithValue("@value", wastedBytes.ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         private void ShowSet(int index)
@@ -488,6 +524,111 @@ namespace SmartFileOrganizer
                 }
             }
             duplicateSets = newSets;
+        }
+
+        private void btnCleanAll_Click(object sender, EventArgs e)
+        {
+            if (duplicateSets.Count == 0)
+            {
+                MessageBox.Show("No duplicate sets to clean.", "Nothing to Clean",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var toDelete = new List<DupFile>();
+            foreach (var set in duplicateSets)
+            {
+                for (int i = 1; i < set.Files.Count; i++)
+                    toDelete.Add(set.Files[i]);
+            }
+
+            if (toDelete.Count == 0)
+            {
+                MessageBox.Show("No duplicate files found to clean.", "Nothing to Clean",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            long totalSize = toDelete.Sum(f => f.FileSize);
+            DialogResult result = MessageBox.Show(
+                $"Delete all {toDelete.Count} duplicate file(s) across {duplicateSets.Count} set(s)?\n" +
+                $"Total space to free: {FormatSize(totalSize)}\n\n" +
+                "This will permanently delete these files from disk.",
+                "Confirm Clean All",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            btnCleanAll.Enabled = false;
+            btnScan.Enabled = false;
+            btnDeleteSelected.Enabled = false;
+
+            int successCount = 0;
+            int failCount = 0;
+
+            prgScanProgress.Maximum = toDelete.Count;
+            prgScanProgress.Value = 0;
+
+            for (int i = 0; i < toDelete.Count; i++)
+            {
+                var file = toDelete[i];
+                prgScanProgress.Value = i + 1;
+                lblStatus.Text = $"Deleting [{i + 1}/{toDelete.Count}]: {file.FileName}";
+                Application.DoEvents();
+
+                try
+                {
+                    if (File.Exists(file.DestPath))
+                        File.Delete(file.DestPath);
+
+                    using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                    {
+                        conn.Open();
+                        using (MySqlCommand cmd = new MySqlCommand(
+                            "DELETE FROM destination_file_data WHERE id = @id", conn))
+                        {
+                            cmd.Parameters.AddWithValue("@id", file.Id);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    failCount++;
+                    lblStatus.Text = $"Failed: {file.FileName} — {ex.Message}";
+                    Application.DoEvents();
+                }
+            }
+
+            RemoveDeletedFromSets();
+
+            lblStatus.Text = $"Cleaned {successCount} file(s), {failCount} failed.";
+            MessageBox.Show(
+                $"Clean All completed.\n\n✓ Deleted: {successCount}\n✗ Failed: {failCount}",
+                "Clean All Complete",
+                MessageBoxButtons.OK,
+                failCount > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+            if (duplicateSets.Count == 0)
+            {
+                lblSetNav.Text = "No duplicates remaining";
+                flpFileList.Controls.Clear();
+            }
+            else
+            {
+                if (currentSetIndex >= duplicateSets.Count)
+                    currentSetIndex = duplicateSets.Count - 1;
+                ShowSet(currentSetIndex);
+            }
+
+            UpdateSummary();
+            btnCleanAll.Enabled = true;
+            btnScan.Enabled = true;
+            btnDeleteSelected.Enabled = duplicateSets.Count > 0;
+            prgScanProgress.Value = 0;
         }
 
         private string FormatSize(long bytes)

@@ -19,6 +19,7 @@ namespace SmartFileOrganizer
         private FormOperationHistory operationHistoryForm = null;
         private FormDuplicateFinder duplicateFinderForm = null;
         private FormSettings settingsForm = null;
+        private FormDashboardAnalytics dashboardAnalyticsForm = null;
 
         public FormDashboard()
         {
@@ -44,7 +45,36 @@ namespace SmartFileOrganizer
         }
         private void FormDashboard_Load(object sender, EventArgs e)
         {
+            DatabaseConfig.EnsureDatabase();
+            ShowDashboard();
+        }
 
+        private void ShowDashboard()
+        {
+            if (dashboardAnalyticsForm == null)
+            {
+                dashboardAnalyticsForm = new FormDashboardAnalytics();
+                dashboardAnalyticsForm.NavigateToFolderSelection += (s, args) => btnFolderSelection_Click(s, args);
+                dashboardAnalyticsForm.NavigateToConfigureRules += (s, args) => btnConfigureRules_Click(s, args);
+                dashboardAnalyticsForm.NavigateToDuplicateFinder += (s, args) => btnDuplicateCleaner_Click(s, args);
+            }
+
+            if (activeForm != null)
+                activeForm.Hide();
+
+            activeForm = dashboardAnalyticsForm;
+            dashboardAnalyticsForm.TopLevel = false;
+            dashboardAnalyticsForm.FormBorderStyle = FormBorderStyle.None;
+            dashboardAnalyticsForm.Dock = DockStyle.Fill;
+
+            if (!panelMain.Controls.Contains(dashboardAnalyticsForm))
+                panelMain.Controls.Add(dashboardAnalyticsForm);
+
+            panelMain.Tag = dashboardAnalyticsForm;
+            dashboardAnalyticsForm.BringToFront();
+            dashboardAnalyticsForm.Show();
+            dashboardAnalyticsForm.RefreshData();
+            label2.Text = "📊 Dashboard";
         }
 
         private void panelSidebar_Paint(object sender, PaintEventArgs e)
@@ -79,6 +109,7 @@ namespace SmartFileOrganizer
                 folderSelectionForm.BringToFront();
                 folderSelectionForm.Show();
             }
+            label2.Text = "📥 Import Files";
         }
 
         private void btnDuplicateCleaner_Click(object sender, EventArgs e)
@@ -98,6 +129,7 @@ namespace SmartFileOrganizer
                 duplicateFinderForm.BringToFront();
                 duplicateFinderForm.Show();
             }
+            label2.Text = "🔍 Find Duplicates";
         }
 
         private void btnScanPreview_Click(object sender, EventArgs e)
@@ -117,6 +149,7 @@ namespace SmartFileOrganizer
                 previewOrganizeForm.BringToFront();
                 previewOrganizeForm.Show();
             }
+            label2.Text = "⚡ Preview & Organize";
         }
 
         private void btnOperationHistory_Click(object sender, EventArgs e)
@@ -137,6 +170,7 @@ namespace SmartFileOrganizer
                 operationHistoryForm.BringToFront();
                 operationHistoryForm.Show();
             }
+            label2.Text = "🕒 Operation History";
         }
 
         private void btnConfigureRules_Click(object sender, EventArgs e)
@@ -156,6 +190,12 @@ namespace SmartFileOrganizer
                 configureRulesForm.BringToFront();
                 configureRulesForm.Show();
             }
+            label2.Text = "⚙️ Configure Rules";
+        }
+
+        private void btnDashboard_Click(object sender, EventArgs e)
+        {
+            ShowDashboard();
         }
 
         private void btnSettings_Click(object sender, EventArgs e)
@@ -175,6 +215,7 @@ namespace SmartFileOrganizer
                 settingsForm.BringToFront();
                 settingsForm.Show();
             }
+            label2.Text = "⚙️ Application Settings";
         }
 
         private void label2_Click(object sender, EventArgs e)

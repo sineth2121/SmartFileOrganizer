@@ -42,15 +42,15 @@ namespace SmartFileOrganizer
             imgList.Images.Clear();
 
             imgList.Images.Add("Folder", CreatePlaceholderIcon(
-                Color.FromArgb(255, 200, 80), "F", Color.Brown, imgList.ImageSize.Width));
+                Color.FromArgb(210, 185, 130), "F", Color.FromArgb(50, 45, 30), imgList.ImageSize.Width));
             imgList.Images.Add("Document", CreatePlaceholderIcon(
-                Color.FromArgb(100, 160, 230), "D", Color.White, imgList.ImageSize.Width));
+                Color.FromArgb(140, 155, 185), "D", Color.White, imgList.ImageSize.Width));
             imgList.Images.Add("Image", CreatePlaceholderIcon(
-                Color.FromArgb(100, 200, 120), "I", Color.White, imgList.ImageSize.Width));
+                Color.FromArgb(140, 175, 145), "I", Color.White, imgList.ImageSize.Width));
             imgList.Images.Add("Video", CreatePlaceholderIcon(
-                Color.FromArgb(200, 100, 160), "V", Color.White, imgList.ImageSize.Width));
+                Color.FromArgb(175, 130, 155), "V", Color.White, imgList.ImageSize.Width));
             imgList.Images.Add("GenericFile", CreatePlaceholderIcon(
-                Color.FromArgb(180, 180, 180), "F", Color.White, imgList.ImageSize.Width));
+                Color.FromArgb(160, 160, 160), "F", Color.White, imgList.ImageSize.Width));
         }
 
         private void PopulateTreeIcons()
@@ -64,11 +64,11 @@ namespace SmartFileOrganizer
             using (Graphics g = Graphics.FromImage(folderIcon))
             {
                 g.Clear(Color.Transparent);
-                using (Brush brush = new SolidBrush(Color.FromArgb(255, 200, 80)))
+                using (Brush brush = new SolidBrush(Color.FromArgb(210, 185, 130)))
                 {
                     g.FillRectangle(brush, 1, 3, 14, 12);
                 }
-                g.DrawRectangle(Pens.Brown, 1, 3, 14, 12);
+                g.DrawRectangle(new Pen(Color.FromArgb(80, 75, 55)), 1, 3, 14, 12);
             }
             imgList.Images.Add(folderIcon);
 
@@ -76,11 +76,11 @@ namespace SmartFileOrganizer
             using (Graphics g = Graphics.FromImage(fileIcon))
             {
                 g.Clear(Color.Transparent);
-                using (Brush brush = new SolidBrush(Color.FromArgb(100, 160, 230)))
+                using (Brush brush = new SolidBrush(Color.FromArgb(140, 155, 185)))
                 {
                     g.FillRectangle(brush, 2, 2, 12, 12);
                 }
-                g.DrawRectangle(Pens.DarkBlue, 2, 2, 12, 12);
+                g.DrawRectangle(new Pen(Color.FromArgb(60, 65, 80)), 2, 2, 12, 12);
             }
             imgList.Images.Add(fileIcon);
         }
@@ -253,7 +253,7 @@ namespace SmartFileOrganizer
                 {
                     conn.Open();
                     using (MySqlCommand cmd = new MySqlCommand(
-                        "SELECT destination_folder_path FROM app_settings ORDER BY id DESC LIMIT 1", conn))
+                        "SELECT setting_value FROM app_settings WHERE setting_key = 'destination_folder_path' LIMIT 1", conn))
                     {
                         object result = cmd.ExecuteScalar();
                         if (result != null)
@@ -595,7 +595,7 @@ namespace SmartFileOrganizer
 
                 int index = 0;
                 bool isMove = UseMoveOperation();
-                string executionId = Guid.NewGuid().ToString();
+                string executionId = GenerateExecutionId();
 
                 using (MySqlConnection conn = DatabaseConfig.GetConnection())
                 {
@@ -758,6 +758,36 @@ namespace SmartFileOrganizer
             {
                 string dest = Path.Combine(destDir, Path.GetFileName(dir));
                 CopyDirectoryRecursive(dir, dest);
+            }
+        }
+
+        private string GenerateExecutionId()
+        {
+            try
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT COALESCE(MAX(CAST(SUBSTRING(execution_id, 4) AS UNSIGNED)), 0) + 1 " +
+                        "FROM operation_history WHERE execution_id LIKE 'exe%'", conn))
+                    {
+                        object result = cmd.ExecuteScalar();
+                        int num = result != null ? Convert.ToInt32(result) : 1;
+                        return "exe" + num;
+                    }
+                }
+            }
+            catch
+            {
+                using (MySqlConnection conn = DatabaseConfig.GetConnection())
+                {
+                    conn.Open();
+                    using (MySqlCommand cmd = new MySqlCommand("SELECT COALESCE(MAX(id), 0) + 1 FROM operation_history", conn))
+                    {
+                        return "exe" + Convert.ToInt32(cmd.ExecuteScalar());
+                    }
+                }
             }
         }
 

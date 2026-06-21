@@ -21,6 +21,7 @@ namespace SmartFileOrganizer
             // 
             // progressBar
             // 
+            this.progressBar.ForeColor = System.Drawing.Color.FromArgb(110, 110, 110);
             this.progressBar.Location = new System.Drawing.Point(12, 40);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(360, 25);
